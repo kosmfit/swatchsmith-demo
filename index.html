@@ -1,0 +1,1657 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src blob: data:">
+<title>Swatchsmith (free demo)</title>
+<style>:root{--bg:#f6f5f2;--panel:#fff;--ink:#1f2328;--muted:#5f6670;--line:#dcd9d2;--accent:#5b3fd1;--accent-ink:#fff;--warn:#9a5b00;--warn-bg:#fff4e0;--err:#b3261e;--err-bg:#fdecea;--ok:#1d7a46;--check:#e9e6df}
+@media (prefers-color-scheme:dark){:root{--bg:#16171a;--panel:#1f2125;--ink:#e8e8ea;--muted:#a0a4ab;--line:#33363c;--accent:#8f7bff;--accent-ink:#111;--warn:#f0b35a;--warn-bg:#2d2414;--err:#ff8a80;--err-bg:#2e1716;--ok:#5fd394;--check:#2a2c31}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0;letter-spacing:.2px}
+header .tag{font-size:12px;color:var(--muted)}
+header .spacer{flex:1}
+.badge{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600}
+main{display:grid;grid-template-columns:minmax(380px,1fr) minmax(360px,1fr);gap:16px;padding:16px 20px;max-width:1500px;margin:0 auto}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+section h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+section h2 .step{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:7px;padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=text],select,textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:18px;text-align:center;color:var(--muted);margin-bottom:10px}
+.drop.over{border-color:var(--accent);color:var(--ink)}
+.files{max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.file{display:flex;align-items:center;gap:10px;padding:6px 8px;border-bottom:1px solid var(--line)}
+.file:last-child{border-bottom:0}
+.file canvas{width:32px;height:32px;object-fit:contain;image-rendering:pixelated;background:repeating-conic-gradient(var(--check) 0 25%,transparent 0 50%) 0 0/8px 8px;border-radius:4px}
+.file .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.x{border:0;background:transparent;color:var(--muted);font-size:16px;padding:2px 6px}
+.msgs{margin-top:10px;display:grid;gap:6px}
+.msg{border-radius:7px;padding:7px 10px;font-size:13px;display:flex;gap:8px;align-items:flex-start}
+.msg.err{background:var(--err-bg);color:var(--err)}
+.msg.warn{background:var(--warn-bg);color:var(--warn)}
+.msg.ok{background:transparent;color:var(--ok);padding-left:0}
+.msg .x{color:inherit;margin-left:auto}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tab{border-radius:999px;padding:4px 12px}
+.tab.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+table{width:100%;border-collapse:collapse}
+.table-wrap{max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
+th{position:sticky;top:0;background:var(--panel);z-index:1;font-weight:600}
+tr.sel td{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.sw{display:inline-block;width:26px;height:20px;border-radius:4px;border:1px solid var(--line);vertical-align:middle}
+.hex{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+input.hexin{width:84px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+input[type=color]{width:34px;height:24px;padding:0;border:1px solid var(--line);border-radius:4px;background:none;vertical-align:middle}
+.arrow{color:var(--muted)}
+.locked td{opacity:.55}
+.preview{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pv{border:1px solid var(--line);border-radius:8px;padding:8px;overflow:auto;max-height:420px;background:repeating-conic-gradient(var(--check) 0 25%,transparent 0 50%) 0 0/16px 16px}
+.pv h3{margin:0 0 6px;font-size:12px;color:var(--muted);font-weight:600;background:var(--panel);display:inline-block;padding:1px 6px;border-radius:4px}
+.pv canvas{image-rendering:pixelated;display:block}
+.strip{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.strip figure{margin:0;text-align:center;font-size:12px;color:var(--muted)}
+.strip canvas{image-rendering:pixelated;border:1px solid var(--line);border-radius:6px;background:repeating-conic-gradient(var(--check) 0 25%,transparent 0 50%) 0 0/8px 8px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);max-width:560px;width:92vw;padding:18px}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog h3{margin-top:0}
+dialog textarea{width:100%;min-height:110px}
+.slider{display:grid;grid-template-columns:110px 1fr 54px;gap:8px;align-items:center;margin:6px 0}
+.progress{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin-top:8px;display:none}
+.progress>div{height:100%;width:0;background:var(--accent);transition:width .15s}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 20px 24px}
+.help{font-size:13px}
+.help li{margin:4px 0}
+.sr{position:absolute;left:-9999px}
+label.btn.disabled{opacity:.5;pointer-events:none}
+.regions{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.regions h3{font-size:13px;margin:0 0 8px}
+button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pv canvas.painting{cursor:crosshair;touch-action:none}
+select.where{font-size:12px;padding:2px 4px}
+.weblink{font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:999px;padding:2px 10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Swatchsmith</h1>
+  <span class="tag">Batch palette swaps for pixel art · v1.1.0 · works offline: your files never leave this computer</span>
+  <span class="spacer"></span>
+  <span class="badge">DEMO: 3 sprites, 1 variant</span>
+  <button type="button" id="webExamples" title="Three CC0 sprites from Kenney's Tiny Dungeon pack">Try example sprites</button> <a class="weblink" href="https://kosmfit.itch.io/swatchsmith" target="_blank" rel="noopener">Get the full version</a>
+  <button id="helpBtn" type="button">Help</button>
+</header>
+<main>
+  <div>
+    <section aria-labelledby="h-sprites">
+      <h2 id="h-sprites"><span class="step">1</span> Add your sprites</h2>
+      <div class="drop" id="drop">Drop PNG files or a folder here<br><span class="muted">or</span>
+        <div class="row" style="justify-content:center;margin-top:8px">
+          <label class="btn" for="fileIn">Add PNG files…</label>
+          <label class="btn" for="dirIn">Add a folder…</label>
+          <button type="button" id="clearBtn">Clear all</button>
+        </div>
+      </div>
+      <input class="sr" type="file" id="fileIn" accept=".png,image/png" multiple>
+      <input class="sr" type="file" id="dirIn" webkitdirectory multiple>
+      <div class="files" id="files" aria-live="polite"></div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+    </section>
+
+    <section aria-labelledby="h-colours">
+      <h2 id="h-colours"><span class="step">2</span> Choose new colours</h2>
+      <div class="tabs" id="tabs" role="tablist" aria-label="Variants"></div>
+      <div class="row" style="margin-bottom:8px">
+        <button type="button" id="addVar">+ New variant</button>
+        <button type="button" id="dupVar">Duplicate</button>
+        <input type="text" id="varName" aria-label="Variant name" placeholder="Variant name" style="width:150px">
+        <button type="button" id="delVar">Delete variant</button>
+      </div>
+      <div class="row" style="margin-bottom:8px">
+        <label class="muted" for="sortSel">Sort</label>
+        <select id="sortSel"><option value="count">Most used</option><option value="light">Dark → light</option><option value="hue">Hue</option></select>
+        <button type="button" id="selAll">Select all</button>
+        <button type="button" id="selNone">Select none</button>
+        <button type="button" id="mapBtn">Map selected to a palette…</button>
+        <button type="button" id="shiftBtn">Shift hue / brightness…</button>
+        <button type="button" id="resetBtn">Reset selected</button>
+      </div>
+      <p class="muted" id="colourInfo" style="margin:4px 0 8px">Add sprites to see their colours.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th><span class="sr">Select</span></th><th>Original</th><th>Used</th><th title="Locked colours never change">Lock</th><th></th><th>New colour</th><th title="Change this colour everywhere, or only inside or outside the painted region (step 3)">Where</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <div>
+    <section aria-labelledby="h-preview">
+      <h2 id="h-preview"><span class="step">3</span> Preview</h2>
+      <div class="row" style="margin-bottom:8px">
+        <label for="pvSel" class="muted">Sprite</label><select id="pvSel" style="max-width:240px"></select>
+        <label for="zoomSel" class="muted">Zoom</label>
+        <select id="zoomSel"><option value="0">Fit</option><option>1</option><option>2</option><option>4</option><option>8</option><option>16</option></select>
+      </div>
+      <div class="preview">
+        <div class="pv"><h3>Original</h3><canvas id="pvA"></canvas></div>
+        <div class="pv"><h3 id="pvBLabel">Variant</h3><canvas id="pvB"></canvas></div>
+      </div>
+      <div class="strip" id="strip"></div>
+      <div class="regions" id="regionTools">
+        <h3>Region <span class="muted">(optional: recolour only part of a sprite)</span></h3>
+        <div class="row">
+          <button type="button" id="rgPaint" aria-pressed="false">Paint region</button>
+          <select id="rgTool" aria-label="Region tool">
+            <option value="brush">Brush: add</option><option value="erase">Brush: remove</option>
+            <option value="fill">Fill same colour: add</option><option value="unfill">Fill same colour: remove</option>
+          </select>
+          <select id="rgSize" aria-label="Brush size"><option value="1">1 px</option><option value="2">2 px</option><option value="3">3 px</option><option value="5">5 px</option></select>
+          <button type="button" id="rgClear">Clear</button>
+          <button type="button" id="rgCopy">Copy to same-size sprites</button>
+          <label class="btn" for="rgIn">Load mask images…</label>
+          <input class="sr" type="file" id="rgIn" accept=".png,image/png" multiple>
+        </div>
+        <p class="muted" id="rgInfo" style="margin:6px 0 0"></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-export">
+      <h2 id="h-export"><span class="step">4</span> Export</h2>
+      <div class="row" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <label><input type="checkbox" id="optPal" checked> Palette files for each variant (.hex for Lospec/Aseprite, .gpl for GIMP/Krita)</label>
+        <label><input type="checkbox" id="optLut" checked> Palette lookup texture (palette_lut.png) for shader palette swaps</label>
+        <label style="margin-left:22px"><input type="checkbox" id="optShd" checked> Ready-made shaders for it (Godot 4 and GLSL)</label>
+        <label><input type="checkbox" id="optProj" checked> Project file, so you can reuse these swaps later</label>
+        <label><input type="checkbox" id="optOrig"> Copy of the original sprites</label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button type="button" class="primary" id="exportBtn">Export ZIP</button>
+        <button type="button" id="cancelExport" hidden>Cancel export</button>
+        <span class="muted" id="exportInfo"></span>
+      </div>
+      <div class="progress" id="prog"><div></div></div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+      <div class="row">
+        <button type="button" id="saveProj">Save project…</button>
+        <label class="btn" for="projIn">Load project…</label>
+        <input class="sr" type="file" id="projIn" accept=".json,application/json">
+        <span class="muted">Projects store your colour swaps, not your images.</span>
+      </div>
+    </section>
+  </div>
+</main>
+<footer>Swatchsmith 1.1.0 · Processes everything locally in your browser. No uploads, no tracking, no internet connection needed. · Example sprites: “Tiny Dungeon” by Kenney (kenney.nl), CC0.</footer>
+
+<dialog id="mapDlg">
+  <h3>Map selected colours to a palette</h3>
+  <p class="muted">Paste hex codes (one per line or comma-separated), or load a .hex / .gpl / JASC .pal / paint.net .txt palette, or a PNG image (its colours become the palette, in reading order). Lospec palette downloads work.</p>
+  <textarea id="palText" placeholder="#1a1c2c&#10;#5d275d&#10;#b13e53"></textarea>
+  <div class="row" style="margin:8px 0">
+    <label class="btn" for="palFile">Load palette file…</label>
+    <input class="sr" type="file" id="palFile" accept=".hex,.gpl,.pal,.txt,.png,image/png">
+    <span class="muted" id="palCount"></span>
+  </div>
+  <fieldset style="border:1px solid var(--line);border-radius:8px">
+    <legend>Matching</legend>
+    <label><input type="radio" name="method" value="brightness" checked> By brightness order: keeps light and shade (best for swapping one colour ramp for another)</label><br>
+    <label><input type="radio" name="method" value="nearest"> Nearest colour: snaps each colour to the closest one in the palette</label>
+  </fieldset>
+  <div class="row" style="margin-top:8px"><label for="mapWhere">Where</label>
+    <select id="mapWhere"><option value="">Everywhere</option><option value="in">Only inside the region</option><option value="out">Only outside the region</option></select></div>
+  <div class="msgs" id="mapMsg"></div>
+  <div class="row" style="justify-content:flex-end;margin-top:12px">
+    <button type="button" id="mapCancel">Cancel</button>
+    <button type="button" class="primary" id="mapApply">Apply to selected</button>
+  </div>
+</dialog>
+
+<dialog id="shiftDlg">
+  <h3>Shift the selected colours</h3>
+  <p class="muted">Shifts start from each colour’s current new colour (or the original if you haven’t changed it), so they add to your earlier edits. Changes are made in a perceptual colour space (OKLCh), so shading stays even.</p>
+  <div class="slider"><label for="shHue">Hue</label><input type="range" id="shHue" min="-180" max="180" value="0"><span id="shHueV">0°</span></div>
+  <div class="slider"><label for="shChr">Saturation</label><input type="range" id="shChr" min="0" max="200" value="100"><span id="shChrV">100%</span></div>
+  <div class="slider"><label for="shLit">Brightness</label><input type="range" id="shLit" min="-30" max="30" value="0"><span id="shLitV">0</span></div>
+  <div class="row" style="margin-top:8px"><label for="shWhere">Where</label>
+    <select id="shWhere"><option value="">Everywhere</option><option value="in">Only inside the region</option><option value="out">Only outside the region</option></select></div>
+  <div class="row" style="justify-content:flex-end;margin-top:12px">
+    <button type="button" id="shCancel">Cancel</button>
+    <button type="button" class="primary" id="shApply">Apply to selected</button>
+  </div>
+</dialog>
+
+<dialog id="helpDlg">
+  <h3>How to use Swatchsmith</h3>
+  <ol class="help">
+    <li><b>Add sprites:</b> PNG files or a whole folder (sub-folders are kept in the export).</li>
+    <li><b>Choose new colours</b> for the current variant. Click a swatch, type a hex code, or select several colours and use <i>Map selected to a palette</i> to swap a whole colour ramp at once.</li>
+    <li><b>Lock</b> colours that must never change (eyes, outlines, UI). Locked colours are skipped by every tool.</li>
+    <li>Add more <b>variants</b> (red team, blue team, poisoned, night…). Each one exports to its own folder.</li>
+    <li><b>Regions</b> (optional): when two parts of a sprite share a colour, paint a region in step 3 (or load mask images: white or any colour on transparent or black, named like the sprite with “_mask” added, for example knight_mask.png). Then set a colour’s <i>Where</i> to “inside” or “outside” the region. Regions are saved in project files.</li>
+    <li><b>Export ZIP:</b> every sprite in every variant, plus palettes, a lookup texture with ready-made Godot 4 / GLSL shaders, and a project file.</li>
+  </ol>
+  <p class="help muted">Notes: colours match exactly (pixel-perfect, no smoothing). Transparency is kept, and only the colour changes. Fully transparent pixels are never changed. Maximum 4096 × 4096 pixels and 65,536 colours per image; 64 megapixels and 262,144 colours per session (for example 256 sheets of 512 × 512), so your browser doesn’t run out of memory. Works best with pixel art. The colour table shows the 512 most-used colours, but exports always include every colour. Controls are locked while sprites are loading and while an export runs (you can cancel an export). Every exported file gets a name that unzips safely on macOS, Windows and Linux; anything renamed is listed in the ZIP’s README.txt.</p>
+  <div class="row" style="justify-content:flex-end"><button type="button" id="helpClose">Close</button></div>
+</dialog>
+
+<script>/* Swatchsmith core: PNG decode/encode, colour handling, palettes, LUT and ZIP writing.
+   Pure functions, no DOM. Runs in modern browsers and in Node 18+ (for tests). No network access. */
+const Swatch = (() => {
+  'use strict';
+  const VERSION = '1.1.0';
+  const MAX_PIXELS = 4096 * 4096;
+  const MAX_IMAGE_COLOURS = 65536;     // per image: Swatchsmith is for pixel art and limited palettes
+  const MAX_SESSION_COLOURS = 262144;  // across all sprites in a session (bounds memory and export size)
+
+  class SwatchError extends Error {
+    constructor(code, message) { super(message); this.code = code; this.name = 'SwatchError'; }
+  }
+
+  // ------------------------------------------------------------------ CRC32 (PNG + ZIP)
+  const CRC_TABLE = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(bytes, start = 0, end = bytes.length) {
+    let c = 0xFFFFFFFF;
+    for (let i = start; i < end; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  // ------------------------------------------------------------------ zlib via the platform's streams
+  async function pipe(bytes, transform) {
+    const out = new Blob([bytes]).stream().pipeThrough(transform);
+    return new Uint8Array(await new Response(out).arrayBuffer());
+  }
+  const inflate = (bytes) => pipe(bytes, new DecompressionStream('deflate'));
+  const deflate = (bytes) => pipe(bytes, new CompressionStream('deflate'));
+
+  // ------------------------------------------------------------------ PNG decoding
+  const PNG_SIG = [137, 80, 78, 71, 13, 10, 26, 10];
+  const CHANNELS = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
+  const DEPTHS = { 0: [1, 2, 4, 8, 16], 2: [8, 16], 3: [1, 2, 4, 8], 4: [8, 16], 6: [8, 16] };
+  const ADAM7 = [[0, 0, 8, 8], [4, 0, 8, 8], [0, 4, 4, 8], [2, 0, 4, 4], [0, 2, 2, 4], [1, 0, 2, 2], [0, 1, 1, 2]];
+
+  function paeth(a, b, c) {
+    const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+    return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+  }
+
+  async function decodePNG(input, name = 'This file') {
+    const b = input instanceof Uint8Array ? input : new Uint8Array(input);
+    if (b.length < 8 || PNG_SIG.some((v, i) => b[i] !== v)) {
+      throw new SwatchError('not-png', `${name} is not a PNG image. Swatchsmith works with PNG files: export your sprites as PNG and add them again.`);
+    }
+    const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    let pos = 8, hdr = null, plte = null, trns = null, ended = false;
+    const idat = [];
+    while (pos + 12 <= b.length) {
+      const len = dv.getUint32(pos);
+      const type = String.fromCharCode(b[pos + 4], b[pos + 5], b[pos + 6], b[pos + 7]);
+      const ds = pos + 8, de = ds + len;
+      if (de + 4 > b.length) throw new SwatchError('damaged', `${name} is incomplete (it ends part-way through the image data). Try saving it again.`);
+      if (crc32(b, pos + 4, de) !== dv.getUint32(de)) throw new SwatchError('damaged', `${name} is damaged (the ${type} section failed its checksum). Try saving it again from your art program.`);
+      const d = b.subarray(ds, de);
+      if (type === 'IHDR') {
+        const v = new DataView(d.buffer, d.byteOffset, d.byteLength);
+        hdr = { w: v.getUint32(0), h: v.getUint32(4), depth: d[8], ctype: d[9], comp: d[10], filt: d[11], interlace: d[12] };
+      } else if (type === 'PLTE') plte = d;
+      else if (type === 'tRNS') trns = d;
+      else if (type === 'IDAT') idat.push(d);
+      else if (type === 'IEND') { ended = true; break; }
+      pos = de + 4;
+    }
+    if (!hdr) throw new SwatchError('damaged', `${name} has no image header, so it can't be read.`);
+    const { w, h, depth, ctype, interlace } = hdr;
+    if (!(ctype in CHANNELS) || !DEPTHS[ctype].includes(depth) || hdr.comp !== 0 || hdr.filt !== 0 || interlace > 1) {
+      throw new SwatchError('unsupported', `${name} uses a PNG variant Swatchsmith can't read (colour type ${ctype}, ${depth}-bit). Re-save it as a normal 8-bit RGBA PNG.`);
+    }
+    if (w === 0 || h === 0) throw new SwatchError('damaged', `${name} has zero width or height.`);
+    if (w * h > MAX_PIXELS) throw new SwatchError('too-large', `${name} is ${w} × ${h} pixels. The maximum is 4096 × 4096 (about 16.7 million pixels). Split large sheets into smaller files.`);
+    if (ctype === 3 && !plte) throw new SwatchError('damaged', `${name} is an indexed PNG with no palette.`);
+    if (!idat.length) throw new SwatchError('damaged', `${name} contains no image data.`);
+    if (!ended) { /* tolerate a missing IEND: many tools still read these files */ }
+
+    const total = idat.reduce((s, c) => s + c.length, 0);
+    const z = new Uint8Array(total);
+    let o = 0;
+    for (const c of idat) { z.set(c, o); o += c.length; }
+    let raw;
+    try { raw = await inflate(z); } catch (e) {
+      throw new SwatchError('damaged', `${name} is damaged (its compressed image data can't be unpacked).`);
+    }
+
+    const ch = CHANNELS[ctype], bitsPP = ch * depth, bpp = Math.max(1, bitsPP >> 3);
+    const out = new Uint8Array(w * h * 4);
+    const warnings = [];
+    if (depth === 16) warnings.push('16-bit colour was reduced to 8-bit (normal for pixel art).');
+    const maxV = (1 << depth) - 1;
+    const trnsGray = trns && ctype === 0 ? (trns[0] << 8) | trns[1] : -1;
+    const trnsRGB = trns && ctype === 2 ? [(trns[0] << 8) | trns[1], (trns[2] << 8) | trns[3], (trns[4] << 8) | trns[5]] : null;
+
+    const passes = interlace ? ADAM7 : [[0, 0, 1, 1]];
+    let rp = 0;
+    for (const [x0, y0, dx, dy] of passes) {
+      const pw = Math.ceil((w - x0) / dx), ph = Math.ceil((h - y0) / dy);
+      if (pw <= 0 || ph <= 0) continue;
+      const rowBytes = Math.ceil((pw * bitsPP) / 8);
+      let prev = new Uint8Array(rowBytes), cur = new Uint8Array(rowBytes);
+      for (let y = 0; y < ph; y++) {
+        if (rp + 1 + rowBytes > raw.length) throw new SwatchError('damaged', `${name} is incomplete (image data ends early).`);
+        const f = raw[rp];
+        cur.set(raw.subarray(rp + 1, rp + 1 + rowBytes));
+        rp += 1 + rowBytes;
+        for (let i = 0; i < rowBytes; i++) {
+          const a = i >= bpp ? cur[i - bpp] : 0, up = prev[i], c = i >= bpp ? prev[i - bpp] : 0;
+          switch (f) {
+            case 0: break;
+            case 1: cur[i] = (cur[i] + a) & 255; break;
+            case 2: cur[i] = (cur[i] + up) & 255; break;
+            case 3: cur[i] = (cur[i] + ((a + up) >> 1)) & 255; break;
+            case 4: cur[i] = (cur[i] + paeth(a, up, c)) & 255; break;
+            default: throw new SwatchError('damaged', `${name} is damaged (unknown row filter ${f}).`);
+          }
+        }
+        const sample = (x, k) => {
+          if (depth === 8) return cur[x * ch + k];
+          if (depth === 16) { const j = (x * ch + k) * 2; return (cur[j] << 8) | cur[j + 1]; }
+          const bit = (x * ch + k) * depth;
+          return (cur[bit >> 3] >> (8 - depth - (bit & 7))) & maxV;
+        };
+        const to8 = (v) => depth === 16 ? v >> 8 : depth === 8 ? v : Math.round((v * 255) / maxV);
+        const yy = y0 + y * dy;
+        for (let x = 0; x < pw; x++) {
+          const p = (yy * w + x0 + x * dx) * 4;
+          let r, g, bl, al = 255;
+          if (ctype === 0) { const v = sample(x, 0); r = g = bl = to8(v); if (v === trnsGray) al = 0; }
+          else if (ctype === 2) {
+            const sr = sample(x, 0), sg = sample(x, 1), sb = sample(x, 2);
+            r = to8(sr); g = to8(sg); bl = to8(sb);
+            if (trnsRGB && sr === trnsRGB[0] && sg === trnsRGB[1] && sb === trnsRGB[2]) al = 0;
+          } else if (ctype === 3) {
+            const idx = sample(x, 0);
+            if (idx * 3 + 2 >= plte.length) throw new SwatchError('damaged', `${name} refers to a palette colour that doesn't exist.`);
+            r = plte[idx * 3]; g = plte[idx * 3 + 1]; bl = plte[idx * 3 + 2];
+            if (trns && idx < trns.length) al = trns[idx];
+          } else if (ctype === 4) { r = g = bl = to8(sample(x, 0)); al = to8(sample(x, 1)); }
+          else { r = to8(sample(x, 0)); g = to8(sample(x, 1)); bl = to8(sample(x, 2)); al = to8(sample(x, 3)); }
+          out[p] = r; out[p + 1] = g; out[p + 2] = bl; out[p + 3] = al;
+        }
+        const t = prev; prev = cur; cur = t;
+      }
+    }
+    return { width: w, height: h, data: out, warnings };
+  }
+
+  // ------------------------------------------------------------------ PNG encoding (8-bit RGBA, adaptive filters)
+  function chunk(type, data) {
+    const c = new Uint8Array(12 + data.length), v = new DataView(c.buffer);
+    v.setUint32(0, data.length);
+    for (let i = 0; i < 4; i++) c[4 + i] = type.charCodeAt(i);
+    c.set(data, 8);
+    v.setUint32(8 + data.length, crc32(c, 4, 8 + data.length));
+    return c;
+  }
+  // onYield (optional): awaited every 64 rows so a browser UI stays responsive while large images are encoded.
+  async function encodePNG({ width: w, height: h, data }, onYield = null) {
+    if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1 || w * h > MAX_PIXELS * 4) {
+      throw new SwatchError('encode', `Can't write a ${w} × ${h} PNG: images need a width and height of at least 1 pixel.`);
+    }
+    if (!data || data.length !== w * h * 4) throw new SwatchError('encode', `Can't write the PNG: expected ${w * h * 4} bytes of pixel data, got ${data ? data.length : 0}.`);
+    const stride = w * 4, raw = new Uint8Array(h * (stride + 1));
+    const cand = [0, 1, 2, 3, 4].map(() => new Uint8Array(stride));
+    let prev = new Uint8Array(stride);
+    for (let y = 0; y < h; y++) {
+      if (onYield && y && y % 64 === 0) await onYield();
+      const row = data.subarray(y * stride, (y + 1) * stride);
+      let best = 0, bestSum = Infinity;
+      for (let f = 0; f < 5; f++) {
+        const outRow = cand[f];
+        let sum = 0;
+        for (let i = 0; i < stride; i++) {
+          const a = i >= 4 ? row[i - 4] : 0, up = prev[i], c = i >= 4 ? prev[i - 4] : 0;
+          const v = (f === 0 ? row[i] : f === 1 ? row[i] - a : f === 2 ? row[i] - up : f === 3 ? row[i] - ((a + up) >> 1) : row[i] - paeth(a, up, c)) & 255;
+          outRow[i] = v; sum += v < 128 ? v : 256 - v;
+        }
+        if (sum < bestSum) { bestSum = sum; best = f; }
+      }
+      raw[y * (stride + 1)] = best;
+      raw.set(cand[best], y * (stride + 1) + 1);
+      prev = row;
+    }
+    const ihdr = new Uint8Array(13), v = new DataView(ihdr.buffer);
+    v.setUint32(0, w); v.setUint32(4, h); ihdr[8] = 8; ihdr[9] = 6;
+    const parts = [new Uint8Array(PNG_SIG), chunk('IHDR', ihdr), chunk('IDAT', await deflate(raw)), chunk('IEND', new Uint8Array(0))];
+    const out = new Uint8Array(parts.reduce((s, p) => s + p.length, 0));
+    let o = 0;
+    for (const p of parts) { out.set(p, o); o += p.length; }
+    return out;
+  }
+
+  // ------------------------------------------------------------------ colours
+  // A colour key packs RGBA into one unsigned 32-bit number. Every fully transparent pixel shares key 0.
+  const keyOf = (r, g, b, a) => (a === 0 ? 0 : (((r << 24) | (g << 16) | (b << 8) | a) >>> 0));
+  const unkey = (k) => ({ r: k >>> 24, g: (k >>> 16) & 255, b: (k >>> 8) & 255, a: k & 255 });
+  const hex2 = (n) => n.toString(16).padStart(2, '0');
+  const rgbHex = ({ r, g, b }) => `#${hex2(r)}${hex2(g)}${hex2(b)}`;
+  const keyHex = (k) => { const c = unkey(k); return rgbHex(c) + (c.a === 255 ? '' : hex2(c.a)); };
+  function parseHex(s) {
+    const m = /^#?([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(String(s).trim());
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    return { r: n >> 16, g: (n >> 8) & 255, b: n & 255, a: m[2] ? parseInt(m[2], 16) : 255 };
+  }
+  const keyFromHex = (s) => { const c = parseHex(s); return c ? keyOf(c.r, c.g, c.b, c.a) : null; };
+
+  function countColours(img, limit = Infinity, name = 'This image') {
+    const counts = new Map(), d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const k = keyOf(d[i], d[i + 1], d[i + 2], d[i + 3]);
+      if (k !== 0) {
+        counts.set(k, (counts.get(k) || 0) + 1);
+        if (counts.size > limit) throw new SwatchError('too-many-colours', `${name} has more than ${limit.toLocaleString()} different colours, so it looks like a photo or painted art. Swatchsmith is built for pixel art and limited palettes; reduce its colours first (for example with indexed colour in your art program).`);
+      }
+    }
+    return counts;
+  }
+  function mergeCounts(list) {
+    const all = new Map();
+    for (const m of list) for (const [k, n] of m) all.set(k, (all.get(k) || 0) + n);
+    return all;
+  }
+
+  // mapping: Map<sourceKey, {r,g,b}>. Alpha is always kept from the source pixel.
+  // Optional regions: scope Map<sourceKey, 'in'|'out'> limits a swap to pixels inside (or outside) `mask`
+  // (Uint8Array, one byte per pixel, non-zero = in the region). No mask means an empty region.
+  function applyMapping(img, mapping, { mask = null, scope = null } = {}) {
+    const d = img.data, out = new Uint8Array(d.length);
+    out.set(d);
+    if (!mapping || mapping.size === 0) return { width: img.width, height: img.height, data: out };
+    const scoped = scope && scope.size > 0;
+    let lastK = -1, lastT, lastS;
+    for (let i = 0; i < d.length; i += 4) {
+      const a = d[i + 3];
+      if (a === 0) continue;
+      const k = keyOf(d[i], d[i + 1], d[i + 2], a);
+      if (k !== lastK) { lastK = k; lastT = mapping.get(k); lastS = scoped ? scope.get(k) : undefined; }
+      if (!lastT) continue;
+      if (lastS) { const inside = !!(mask && mask[i >> 2]); if (inside !== (lastS === 'in')) continue; }
+      out[i] = lastT.r; out[i + 1] = lastT.g; out[i + 2] = lastT.b;
+    }
+    return { width: img.width, height: img.height, data: out };
+  }
+
+  // ------------------------------------------------------------------ regions (masks)
+  // A mask image marks the region with painted pixels: anything that is not transparent and not black.
+  // So both "white on transparent" and "white on black" masks work.
+  function maskFromImage(img) {
+    const d = img.data, m = new Uint8Array(img.width * img.height);
+    for (let i = 0, p = 0; i < d.length; i += 4, p++) m[p] = d[i + 3] >= 128 && d[i] + d[i + 1] + d[i + 2] > 96 ? 1 : 0;
+    return m;
+  }
+  const maskCount = (m) => { let n = 0; if (m) for (let i = 0; i < m.length; i++) n += m[i] ? 1 : 0; return n; };
+  // Run-length text: alternating runs of 0s and 1s (starting with 0s), base-36, comma-separated.
+  function maskToRLE(m) {
+    const runs = [];
+    let cur = 0, n = 0;
+    for (let i = 0; i < m.length; i++) { const v = m[i] ? 1 : 0; if (v === cur) n++; else { runs.push(n); cur = v; n = 1; } }
+    runs.push(n);
+    return runs.map((r) => r.toString(36)).join(',');
+  }
+  function maskFromRLE(text, size) {
+    const runs = String(text).split(',').map((s) => parseInt(s, 36));
+    if (runs.some((r) => !Number.isInteger(r) || r < 0) || runs.reduce((s, r) => s + r, 0) !== size) return null;
+    const m = new Uint8Array(size);
+    let p = 0;
+    runs.forEach((r, i) => { if (i % 2) m.fill(1, p, p + r); p += r; });
+    return m;
+  }
+  // Pixels connected (4-way) to (x, y) that have exactly the same colour. Returns their indices, or [] for a transparent pixel.
+  function connectedSameColour(img, x, y) {
+    const { width: w, height: h, data: d } = img;
+    if (x < 0 || y < 0 || x >= w || y >= h) return [];
+    const at = (p) => keyOf(d[p * 4], d[p * 4 + 1], d[p * 4 + 2], d[p * 4 + 3]);
+    const start = y * w + x, k = at(start);
+    if (k === 0) return [];
+    const seen = new Uint8Array(w * h), out = [], stack = [start];
+    seen[start] = 1;
+    while (stack.length) {
+      const p = stack.pop(); out.push(p);
+      const px = p % w, py = (p - px) / w;
+      for (const q of [px > 0 ? p - 1 : -1, px < w - 1 ? p + 1 : -1, py > 0 ? p - w : -1, py < h - 1 ? p + w : -1]) {
+        if (q >= 0 && !seen[q] && at(q) === k) { seen[q] = 1; stack.push(q); }
+      }
+    }
+    return out;
+  }
+
+  // Colours of a palette image, in reading order (left to right, top to bottom), ignoring transparent pixels.
+  function paletteFromImage(img, max = 256, name = 'This image') {
+    const d = img.data, seen = new Set(), out = [];
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] === 0) continue;
+      const k = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+      if (seen.has(k)) continue;
+      seen.add(k); out.push({ r: d[i], g: d[i + 1], b: d[i + 2] });
+      if (out.length > max) throw new SwatchError('palette', `${name} has more than ${max} colours, so it doesn't look like a palette. Use a palette image (for example a Lospec PNG download), or reduce its colours first.`);
+    }
+    if (!out.length) throw new SwatchError('palette', `${name} has no visible colours (every pixel is transparent).`);
+    return out;
+  }
+
+  // ------------------------------------------------------------------ perceptual colour (OKLab / OKLCh)
+  const toLin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  const toSrgb = (l) => { const c = l <= 0.0031308 ? 12.92 * l : 1.055 * l ** (1 / 2.4) - 0.055; return c * 255; };
+  function rgbToOklab({ r, g, b }) {
+    const R = toLin(r), G = toLin(g), B = toLin(b);
+    const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B);
+    const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B);
+    const s = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
+    return { L: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, a: 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, b: 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s };
+  }
+  function oklabToRgbRaw({ L, a, b }) {
+    const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3, m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+    return [toSrgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s), toSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s), toSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s)];
+  }
+  const inGamut = (c) => c.every((v) => v >= -0.5 && v <= 255.5);
+  function oklchToRgb(L, C, H) {
+    L = Math.min(1, Math.max(0, L));
+    let lo = 0, hi = C, rgb = oklabToRgbRaw({ L, a: C * Math.cos(H), b: C * Math.sin(H) });
+    if (!inGamut(rgb)) { // reduce chroma until the colour fits sRGB
+      for (let i = 0; i < 24; i++) {
+        const mid = (lo + hi) / 2, t = oklabToRgbRaw({ L, a: mid * Math.cos(H), b: mid * Math.sin(H) });
+        if (inGamut(t)) { lo = mid; rgb = t; } else hi = mid;
+      }
+      rgb = oklabToRgbRaw({ L, a: lo * Math.cos(H), b: lo * Math.sin(H) });
+    }
+    const [r, g, b] = rgb.map((v) => Math.min(255, Math.max(0, Math.round(v))));
+    return { r, g, b };
+  }
+  const deltaE = (p, q) => Math.hypot(p.L - q.L, p.a - q.a, p.b - q.b);
+
+  // ------------------------------------------------------------------ palettes
+  // paint.net palettes store AARRGGBB. They're detected by their header comment (works for pasted text too) or by
+  // .txt + comment lines (the file name is passed by the UI while the file's header comments are unchanged).
+  function paletteFormat(text, filename = '') {
+    const lines = String(text).replace(/\r/g, '').split('\n'), first = (lines[0] || '').trim();
+    if (/^GIMP Palette/i.test(first)) return 'gpl';
+    if (/^JASC-PAL/i.test(first)) return 'jasc';
+    if (/^RIFF/.test(first)) return 'riff';
+    if (lines.some((l) => /^\s*;\s*paint\.net/i.test(l)) || (lines.some((l) => /^\s*;/.test(l)) && /\.txt$/i.test(filename))) return 'paintnet';
+    return 'hex';
+  }
+  const PALETTE_FORMATS = { gpl: 'GIMP palette', jasc: 'JASC palette', riff: 'RIFF palette', paintnet: 'paint.net (AARRGGBB)', hex: 'hex codes (RRGGBB or RRGGBBAA)' };
+  function parsePalette(text, filename = '') {
+    const lines = String(text).replace(/\r/g, '').split('\n');
+    const format = paletteFormat(text, filename);
+    const cols = [];
+    if (format === 'gpl') {
+      for (const ln of lines.slice(1)) {
+        const m = /^\s*(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})/.exec(ln);
+        if (m) cols.push({ r: +m[1], g: +m[2], b: +m[3] });
+      }
+    } else if (format === 'jasc') {
+      for (const ln of lines.slice(3)) {
+        const m = /^\s*(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})/.exec(ln);
+        if (m) cols.push({ r: +m[1], g: +m[2], b: +m[3] });
+      }
+    } else if (format === 'riff') {
+      throw new SwatchError('palette', 'Binary RIFF .pal files are not supported. Export the palette as .hex, .gpl (GIMP) or JASC .pal instead.');
+    } else {
+      const paintNet = format === 'paintnet';
+      for (const ln of lines) {
+        if (/^\s*;/.test(ln)) continue;
+        for (const m of ln.matchAll(/(?:^|[^0-9a-f])#?([0-9a-f]{8}|[0-9a-f]{6})(?![0-9a-f])/gi)) {
+          const hx = m[1];
+          const rgb = hx.length === 8 ? (paintNet ? hx.slice(2) : hx.slice(0, 6)) : hx;
+          const n = parseInt(rgb, 16);
+          cols.push({ r: n >> 16, g: (n >> 8) & 255, b: n & 255 });
+        }
+      }
+    }
+    const seen = new Set(), out = [];
+    for (const c of cols) {
+      if ([c.r, c.g, c.b].some((v) => v > 255)) continue;
+      const k = rgbHex(c);
+      if (!seen.has(k)) { seen.add(k); out.push(c); }
+    }
+    if (!out.length) throw new SwatchError('palette', 'No colours were found. Paste hex codes (like #1a2b3c), or load a .hex, .gpl or JASC .pal file.');
+    return out;
+  }
+  const paletteHex = (cols) => cols.map((c) => rgbHex(c).slice(1)).join('\n') + '\n';
+  const paletteGPL = (cols, name) => `GIMP Palette\nName: ${name}\nColumns: 8\n#\n` + cols.map((c) => `${String(c.r).padStart(3)} ${String(c.g).padStart(3)} ${String(c.b).padStart(3)}\t${rgbHex(c)}`).join('\n') + '\n';
+
+  // sources: array of keys. Returns Map<key,{r,g,b}> for the given source keys.
+  function autoMap(sources, palette, method = 'nearest') {
+    const map = new Map();
+    if (!sources.length || !palette.length) return map;
+    const pal = palette.map((c) => ({ c, lab: rgbToOklab(c) }));
+    if (method === 'nearest') {
+      for (const k of sources) {
+        const lab = rgbToOklab(unkey(k));
+        let best = pal[0], bd = Infinity;
+        for (const p of pal) { const d = deltaE(lab, p.lab); if (d < bd) { bd = d; best = p; } }
+        map.set(k, { r: best.c.r, g: best.c.g, b: best.c.b });
+      }
+    } else { // 'brightness': darkest source → darkest palette colour … lightest → lightest
+      const src = sources.map((k) => ({ k, L: rgbToOklab(unkey(k)).L })).sort((x, y) => x.L - y.L || x.k - y.k);
+      const tgt = [...pal].sort((x, y) => x.lab.L - y.lab.L);
+      src.forEach((s, i) => {
+        const j = src.length === 1 ? Math.round((tgt.length - 1) / 2) : Math.round((i * (tgt.length - 1)) / (src.length - 1));
+        const c = tgt[j].c;
+        map.set(s.k, { r: c.r, g: c.g, b: c.b });
+      });
+    }
+    return map;
+  }
+
+  // Hue (degrees), chroma multiplier and lightness change (−1…1) applied in OKLCh.
+  // Shifts start from each colour's current new colour (from `current`, if mapped) so they compose with earlier edits.
+  function shiftColours(sources, { hue = 0, chroma = 1, light = 0 } = {}, current = null) {
+    const map = new Map();
+    for (const k of sources) {
+      const base = (current && current.get(k)) || unkey(k);
+      if (hue === 0 && chroma === 1 && light === 0) { map.set(k, { r: base.r, g: base.g, b: base.b }); continue; }
+      const lab = rgbToOklab(base);
+      const C = Math.hypot(lab.a, lab.b) * chroma, H = Math.atan2(lab.b, lab.a) + (hue * Math.PI) / 180;
+      map.set(k, oklchToRgb(lab.L + light, C, H));
+    }
+    return map;
+  }
+
+  // ------------------------------------------------------------------ LUT: row 0 = source colours, row n = variant n
+  // A shader only sees colours, not regions, so swaps limited to a region keep their original colour here.
+  function buildLUT(sourceKeys, variants) {
+    const w = sourceKeys.length, h = variants.length + 1, data = new Uint8Array(w * h * 4);
+    sourceKeys.forEach((k, x) => {
+      const s = unkey(k);
+      data.set([s.r, s.g, s.b, 255], x * 4);
+      variants.forEach((v, y) => {
+        const t = (v.scope && v.scope.has(k) ? null : v.map.get(k)) || s;
+        data.set([t.r, t.g, t.b, 255], ((y + 1) * w + x) * 4);
+      });
+    });
+    return { width: w, height: h, data };
+  }
+  const regionLimitedCount = (variants) => variants.reduce((n, v) => n + (v.scope ? [...v.scope.keys()].filter((k) => v.map.has(k)).length : 0), 0);
+
+  // ------------------------------------------------------------------ engine shaders (shipped next to palette_lut.png)
+  // Both read row 0 of the LUT to find the pixel's colour and output the same column from row `variant`.
+  // Tested: the GLSL in WebGL2 and the .gdshader in Godot 4 against Swatchsmith's own exported PNGs (see KNOWN-LIMITATIONS.txt).
+  const SHADER_GODOT = `// Swatchsmith palette swap for Godot 4 (CanvasItem: Sprite2D, AnimatedSprite2D, TextureRect…).
+// 1. Copy palette_lut.png into your project (keep the default "Lossless" compression, no mipmaps).
+// 2. Make a ShaderMaterial with this shader on your sprite, and set palette_lut to palette_lut.png.
+// 3. Set variant: 1 = first variant, 2 = second… (0 = original colours). Row names are in palette_lut.json.
+shader_type canvas_item;
+
+uniform sampler2D palette_lut : filter_nearest;
+uniform int variant = 1;
+
+void fragment() {
+\tivec2 size = textureSize(TEXTURE, 0);
+\tvec4 src = texelFetch(TEXTURE, clamp(ivec2(UV * vec2(size)), ivec2(0), size - 1), 0);
+\tvec4 result = src;
+\tint n = textureSize(palette_lut, 0).x;
+\tfor (int i = 0; i < n; i++) {
+\t\tvec3 key = texelFetch(palette_lut, ivec2(i, 0), 0).rgb;
+\t\tif (all(lessThan(abs(key - src.rgb), vec3(0.5 / 255.0)))) {
+\t\t\tresult = vec4(texelFetch(palette_lut, ivec2(i, variant), 0).rgb, src.a);
+\t\t\tbreak;
+\t\t}
+\t}
+\tCOLOR = result; // note: this replaces the node's modulate tint
+}
+`;
+  const SHADER_GLSL = `#version 300 es
+// Swatchsmith palette swap, GLSL ES 3.00 (WebGL2, OpenGL ES 3, OpenGL 3.3+ with small changes).
+// Bind palette_lut.png with NEAREST filtering, no mipmaps, no colour-space conversion.
+// variant: 1 = first variant, 2 = second… (0 = original colours). Row names are in palette_lut.json.
+precision highp float;
+uniform sampler2D sprite;
+uniform sampler2D palette_lut; // row 0 = original colours, row N = variant N
+uniform int variant;
+in vec2 uv;
+out vec4 outColor;
+void main() {
+  vec4 src = texture(sprite, uv);
+  outColor = src;
+  int n = textureSize(palette_lut, 0).x;
+  for (int i = 0; i < n; i++) {
+    vec3 key = texelFetch(palette_lut, ivec2(i, 0), 0).rgb;
+    if (all(lessThan(abs(key - src.rgb), vec3(0.5 / 255.0)))) {
+      outColor = vec4(texelFetch(palette_lut, ivec2(i, variant), 0).rgb, src.a);
+      break;
+    }
+  }
+}
+`;
+
+  // ------------------------------------------------------------------ ZIP (stored, no compression: PNGs are already compressed)
+  function writeZip(files, date = new Date()) {
+    if (files.length > 65000) throw new SwatchError('zip', 'Too many files for one ZIP (limit 65,000). Export fewer variants at once.');
+    assertUniquePaths(files.map((f) => f.name));
+    const enc = new TextEncoder();
+    const time = ((date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1)) & 0xFFFF;
+    const day = (((Math.max(1980, date.getFullYear()) - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate()) & 0xFFFF;
+    const parts = [], central = [];
+    let offset = 0;
+    for (const f of files) {
+      const name = enc.encode(f.name), data = f.data, crc = crc32(data);
+      const lh = new Uint8Array(30 + name.length), lv = new DataView(lh.buffer);
+      lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(6, 0x0800, true);
+      lv.setUint16(10, time, true); lv.setUint16(12, day, true); lv.setUint32(14, crc, true);
+      lv.setUint32(18, data.length, true); lv.setUint32(22, data.length, true); lv.setUint16(26, name.length, true);
+      lh.set(name, 30);
+      const ch = new Uint8Array(46 + name.length), cv = new DataView(ch.buffer);
+      cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint16(8, 0x0800, true);
+      cv.setUint16(12, time, true); cv.setUint16(14, day, true); cv.setUint32(16, crc, true);
+      cv.setUint32(20, data.length, true); cv.setUint32(24, data.length, true); cv.setUint16(28, name.length, true);
+      cv.setUint32(42, offset, true);
+      ch.set(name, 46);
+      parts.push(lh, data); central.push(ch);
+      offset += lh.length + data.length;
+      if (offset > 0xFFFFFFFF) throw new SwatchError('zip', 'The export is larger than 4 GB. Export fewer sprites or variants at once.');
+    }
+    const cdSize = central.reduce((s, c) => s + c.length, 0);
+    const end = new Uint8Array(22), ev = new DataView(end.buffer);
+    ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true);
+    ev.setUint32(12, cdSize, true); ev.setUint32(16, offset, true);
+    return new Blob([...parts, ...central, end], { type: 'application/zip' });
+  }
+
+  // ------------------------------------------------------------------ names and projects
+  function safeName(s, fallback) {
+    const t = String(s || '').replace(/[\\/:*?"<>|\x00-\x1f]/g, '-').replace(/^\.+/, '').trim().slice(0, 80);
+    return t || fallback;
+  }
+  // ------------------------------------------------------------------ collision-proof archive paths
+  // Two paths are "the same" if they match ignoring case and Unicode form (macOS and Windows treat "café" written
+  // with é and with e + accent as one name, and ignore case), so every comparison uses this key.
+  const lc = (s) => String(s).normalize('NFC').toLowerCase();
+  const WIN_RESERVED = /^(con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³])$/i;
+  // One path segment that extracts unchanged on macOS, Windows and Linux: NFC, no characters Windows forbids,
+  // no leading dots, no trailing dots or spaces (Windows drops them, so "red." would land in "red"), and no
+  // Windows device names ("con.png" can't be created there).
+  function portableSegment(s, fallback, maxLen = 80) {
+    const clean = (t) => t.replace(/[\\/:*?"<>|\x00-\x1f\x7f]/g, '-').replace(/^[.\s]+/, '').replace(/[.\s]+$/, '');
+    let t = clean(String(s || '').normalize('NFC'));
+    if (t.length > maxLen) { // shorten, but keep a short extension such as ".png"
+      const dot = t.lastIndexOf('.'), ext = dot > 0 && t.length - dot <= 10 ? t.slice(dot) : '';
+      t = clean(t.slice(0, maxLen - ext.length)) + ext;
+    }
+    if (!t) t = fallback;
+    if (WIN_RESERVED.test(t.split('.')[0].trim())) t = `_${t}`;
+    return t;
+  }
+  const isPortableSegment = (s) => s !== '' && s === portableSegment(s, '', Infinity);
+  // Returns allocate(path): every result is unique (ignoring case and Unicode form), never equals a reserved file, never
+  // equals or merges into a folder that belongs to a different source folder, and never puts a file where a folder is
+  // (or the reverse). Generated suffixes are re-checked until free, so they can't collide either.
+  function pathAllocator(reservedFiles = []) {
+    const files = new Set(reservedFiles.map(lc)), dirOwner = new Map(), alias = new Map();
+    function allocDir(segs) {
+      let out = '';
+      for (let i = 0; i < segs.length; i++) {
+        const key = lc(segs.slice(0, i + 1).join('/'));
+        if (alias.has(key)) { out = alias.get(key); continue; }
+        const prefix = out ? `${out}/` : '';
+        let cand = prefix + segs[i], n = 2;
+        while (files.has(lc(cand)) || (dirOwner.has(lc(cand)) && dirOwner.get(lc(cand)) !== key)) cand = `${prefix}${segs[i]}-${n++}`;
+        alias.set(key, cand); dirOwner.set(lc(cand), key); out = cand;
+      }
+      return out;
+    }
+    return function allocate(path) {
+      const segs = path.split('/'), base = segs.pop(), dir = allocDir(segs), prefix = dir ? `${dir}/` : '';
+      const dot = base.lastIndexOf('.'), stem = dot > 0 ? base.slice(0, dot) : base, ext = dot > 0 ? base.slice(dot) : '';
+      let cand = prefix + base, n = 2;
+      while (files.has(lc(cand)) || dirOwner.has(lc(cand))) cand = `${prefix}${stem}-${n++}${ext}`;
+      files.add(lc(cand));
+      return cand;
+    };
+  }
+  function uniqueNames(names, reserved = []) {
+    const alloc = pathAllocator(reserved);
+    return names.map((n) => alloc(n));
+  }
+  // Throws if two paths are equal ignoring case and Unicode form, if a path is used both as a file and as a folder,
+  // or if any segment would be changed or refused when extracted on macOS, Windows or Linux.
+  function assertUniquePaths(paths) {
+    const files = new Set(), dirs = new Set();
+    for (const p of paths) {
+      const bad = p.split('/').find((s) => !isPortableSegment(s));
+      if (bad !== undefined) throw new SwatchError('zip', `Internal error: the exported path “${p}” isn't safe to unzip on every system (“${bad}”). Nothing was saved.`);
+      const l = lc(p), parts = l.split('/');
+      if (files.has(l) || dirs.has(l)) throw new SwatchError('zip', `Internal error: two exported files would share the path “${p}”. Nothing was saved.`);
+      files.add(l);
+      for (let i = 1; i < parts.length; i++) dirs.add(parts.slice(0, i).join('/'));
+    }
+    for (const d of dirs) if (files.has(d)) throw new SwatchError('zip', `Internal error: “${d}” would be both a file and a folder. Nothing was saved.`);
+  }
+  const rawPath = (name) => String(name).split(/[\\/]/).filter((s) => s !== '' && s !== '.').join('/');
+  const imagePath = (name) => {
+    const segs = rawPath(name).split('/').filter(Boolean);
+    return segs.map((p, j) => (j === segs.length - 1 ? portableSegment(p, 'sprite.png') : portableSegment(p, 'folder'))).join('/') || 'sprite.png';
+  };
+
+  // ------------------------------------------------------------------ export plan (pure; works only from a frozen snapshot)
+  const ROOT_FILES = ['palette_lut.png', 'palette_lut.json', 'README.txt', 'swatchsmith-project.json', 'shaders'];
+  const SHADER_README = (cols, rows) => `Palette-swap shaders for palette_lut.png (exported by Swatchsmith ${VERSION}).
+
+palette_lut.png is ${cols} pixels wide (one column per colour) and ${rows} rows tall: row 0 holds the original
+colours, row 1 the first variant, row 2 the second, and so on (names in palette_lut.json). For each pixel, the
+shader finds its colour in row 0 and draws the same column from the chosen row, so your sprites stay normal PNGs
+and switching variant is one number.
+
+palette_swap.gdshader  Godot 4 (canvas_item). Instructions at the top of the file.
+palette_swap.frag      GLSL ES 3.00 fragment shader (WebGL2 / OpenGL ES 3). Port it to other engines from here.
+
+Exact colours matter. Use nearest-neighbour filtering, no mipmaps and lossless (non-VRAM) compression for both
+textures, and keep both in the same colour space. Colours that are not in row 0 are drawn unchanged.
+Swaps you limited to a region are not in palette_lut.png (a shader sees colours, not regions); they are only in
+the exported PNGs.
+`;
+  const MAX_LUT_COLUMNS = 16384; // larger textures are not supported by most GPUs
+  // snap: { images:[{name,width,height,data}], variants:[{name,map}], colourKeys:[...all visible colours], locked:Set,
+  //         options:{ palettes, lut, project, originals } }
+  function planExport(snap) {
+    const notes = [], entries = [];
+    const used = new Set([...ROOT_FILES, 'originals'].map(lc));
+    const folders = snap.variants.map((v, i) => {
+      const base = portableSegment(v.name, `variant-${i + 1}`);
+      let cand = base, n = 2;
+      while (used.has(lc(cand))) cand = `${base}-${n++}`;
+      used.add(lc(cand));
+      return cand;
+    });
+    const inner = pathAllocator(['palette.hex', 'palette.gpl']);
+    const rel = new Array(snap.images.length);
+    const order = snap.images.map((im, i) => ({ i, depth: imagePath(im.name).split('/').length })).sort((a, b) => b.depth - a.depth || a.i - b.i);
+    for (const { i } of order) rel[i] = inner(imagePath(snap.images[i].name));
+    const keys = snap.colourKeys;
+    const limited = regionLimitedCount(snap.variants);
+    snap.variants.forEach((v, vi) => {
+      snap.images.forEach((im, ii) => entries.push({ path: `${folders[vi]}/${rel[ii]}`, kind: 'image', image: ii, variant: vi }));
+      if (snap.options.palettes && keys.length) {
+        // A swap limited to a region can leave the original colour elsewhere, so both colours are listed.
+        const cols = keys.flatMap((k) => { const t = v.map.get(k); return !t ? [unkey(k)] : v.scope && v.scope.has(k) ? [unkey(k), t] : [t]; });
+        const uniq = [...new Map(cols.map((c) => [rgbHex(c), c])).values()];
+        entries.push({ path: `${folders[vi]}/palette.hex`, kind: 'text', text: paletteHex(uniq) });
+        entries.push({ path: `${folders[vi]}/palette.gpl`, kind: 'text', text: paletteGPL(uniq, v.name) });
+      }
+    });
+    if (snap.options.palettes && !keys.length) notes.push('Palette files were skipped: the sprites have no visible (non-transparent) colours.');
+    if (snap.options.originals) snap.images.forEach((im, ii) => entries.push({ path: `originals/${rel[ii]}`, kind: 'image', image: ii, variant: -1 }));
+    if (snap.options.lut) {
+      if (!keys.length) notes.push('The lookup texture (palette_lut.png) was skipped: the sprites have no visible colours.');
+      else if (keys.length > MAX_LUT_COLUMNS) notes.push(`The lookup texture was skipped: ${keys.length.toLocaleString()} colours is more than the ${MAX_LUT_COLUMNS.toLocaleString()} columns a texture can safely hold. Palette files are still complete.`);
+      else {
+        entries.push({ path: 'palette_lut.png', kind: 'lut' });
+        entries.push({ path: 'palette_lut.json', kind: 'text', text: JSON.stringify({ about: 'Row 0 = original colours, row N = variant N. One column per colour.', columns: keys.map(keyHex), rows: ['original', ...snap.variants.map((v) => v.name)], folders: [null, ...folders] }, null, 2) });
+        if (snap.options.shaders) {
+          entries.push({ path: 'shaders/palette_swap.gdshader', kind: 'text', text: SHADER_GODOT });
+          entries.push({ path: 'shaders/palette_swap.frag', kind: 'text', text: SHADER_GLSL });
+          entries.push({ path: 'shaders/README.txt', kind: 'text', text: SHADER_README(keys.length, snap.variants.length + 1) });
+        }
+        if (limited) notes.push(`${limited} colour swap${limited === 1 ? ' is' : 's are'} limited to a region, so ${limited === 1 ? 'it is' : 'they are'} in the exported PNGs but not in palette_lut.png (a shader sees colours, not regions).`);
+      }
+    }
+    if (snap.options.project) entries.push({ path: 'swatchsmith-project.json', kind: 'text', text: projectToJSON(snap) });
+    const has = (p) => entries.some((e) => e.path === p);
+    const renamed = snap.images.map((im, i) => [rawPath(im.name), rel[i]]).filter(([a, b]) => a !== b);
+    const renamedFolders = snap.variants.map((v, i) => [v.name, folders[i]]).filter(([a, b]) => a !== b);
+    const readme = [`Exported by Swatchsmith ${VERSION}.`, '',
+      `Variant folders: ${folders.join(', ')}. Each holds every sprite (${snap.images.length}) with the same file names and sub-folders as your originals.`,
+      ...(snap.options.palettes && keys.length ? ['palette.hex / palette.gpl in each variant folder: every colour that variant uses.'] : []),
+      ...(snap.options.originals ? ['originals/: unchanged copies of your sprites.'] : []),
+      ...(has('palette_lut.png') ? [`palette_lut.png: ${keys.length} columns × ${snap.variants.length + 1} rows (row 0 = original colours, then one row per variant). Details in palette_lut.json.`] : []),
+      ...(has('shaders/README.txt') ? ['shaders/: ready-made palette-swap shaders that use palette_lut.png (Godot 4 and GLSL ES 3.00). See shaders/README.txt.'] : []),
+      ...(limited ? [`Regions: ${limited} colour swap${limited === 1 ? ' applies' : 's apply'} only inside or only outside a painted region.`] : []),
+      ...(has('swatchsmith-project.json') ? ['swatchsmith-project.json: load it in Swatchsmith to reuse these colour swaps.'] : []),
+      ...(renamed.length || renamedFolders.length ? ['', 'Renamed so that every file unzips safely and nothing is overwritten (same name, different case or accents, or a name Windows can’t use):',
+        ...renamedFolders.map(([a, b]) => `  variant “${a}” → folder ${b}/`),
+        ...renamed.slice(0, 200).map(([a, b]) => `  ${a} → ${b}`),
+        ...(renamed.length > 200 ? [`  …and ${renamed.length - 200} more.`] : [])] : []),
+      ...(notes.length ? [''] : []), ...notes.map((n) => `Note: ${n}`), ''].join('\n');
+    entries.push({ path: 'README.txt', kind: 'text', text: readme });
+    assertUniquePaths(entries.map((e) => e.path));
+    const images = entries.filter((e) => e.kind === 'image' && e.variant >= 0).length;
+    return { entries, notes, folders, counts: { images, variants: snap.variants.length, originals: snap.options.originals ? snap.images.length : 0 } };
+  }
+  // Format 2 adds per-colour regions ("where") and the painted regions themselves (keyed by sprite name and size).
+  // Format 1 files (Swatchsmith 1.0) still load.
+  function projectToJSON(state) {
+    const regions = (state.images || []).filter((im) => im.mask && maskCount(im.mask))
+      .map((im) => ({ sprite: im.name, width: im.width, height: im.height, rle: maskToRLE(im.mask) }));
+    return JSON.stringify({
+      app: 'Swatchsmith', format: 2, version: VERSION,
+      locked: [...state.locked].map(keyHex),
+      variants: state.variants.map((v) => ({
+        name: v.name, map: Object.fromEntries([...v.map].map(([k, c]) => [keyHex(k), rgbHex(c)])),
+        ...(v.scope && v.scope.size ? { where: Object.fromEntries([...v.scope].map(([k, s]) => [keyHex(k), s])) } : {}),
+      })),
+      ...(regions.length ? { regions } : {}),
+    }, null, 2);
+  }
+  function projectFromJSON(text) {
+    let p;
+    try { p = JSON.parse(text); } catch { throw new SwatchError('project', 'This project file is not valid JSON.'); }
+    if (!p || p.app !== 'Swatchsmith' || !Array.isArray(p.variants)) throw new SwatchError('project', 'This is not a Swatchsmith project file.');
+    if (Number.isInteger(p.format) && p.format > 2) throw new SwatchError('project', `This project was saved by a newer Swatchsmith (format ${p.format}). Update Swatchsmith to open it.`);
+    const locked = new Set((p.locked || []).map(keyFromHex).filter((k) => k !== null));
+    const variants = p.variants.map((v, i) => {
+      const map = new Map(), scope = new Map();
+      for (const [src, dst] of Object.entries(v.map || {})) {
+        const k = keyFromHex(src), c = parseHex(dst);
+        if (k !== null && c) map.set(k, { r: c.r, g: c.g, b: c.b });
+      }
+      for (const [src, s] of Object.entries(v.where || {})) {
+        const k = keyFromHex(src);
+        if (k !== null && (s === 'in' || s === 'out')) scope.set(k, s);
+      }
+      return { name: safeName(v.name, `variant-${i + 1}`), map, scope };
+    });
+    const regions = [];
+    for (const r of Array.isArray(p.regions) ? p.regions : []) {
+      const w = r && r.width, h = r && r.height;
+      if (!r || typeof r.sprite !== 'string' || !Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1 || w * h > MAX_PIXELS) continue;
+      const mask = maskFromRLE(r.rle, w * h);
+      if (mask) regions.push({ sprite: r.sprite, width: w, height: h, mask });
+    }
+    return { locked, variants, regions };
+  }
+
+  const api = {
+    VERSION, MAX_PIXELS, MAX_IMAGE_COLOURS, MAX_SESSION_COLOURS, SwatchError, crc32, decodePNG, encodePNG, keyOf, unkey, keyHex, rgbHex, parseHex, keyFromHex,
+    countColours, mergeCounts, applyMapping, rgbToOklab, oklchToRgb, parsePalette, paletteHex, paletteGPL, autoMap, shiftColours,
+    buildLUT, writeZip, safeName, uniqueNames, pathAllocator, assertUniquePaths, imagePath, planExport, MAX_LUT_COLUMNS,
+    portableSegment, paletteFormat, PALETTE_FORMATS,
+    projectToJSON, projectFromJSON,
+    paletteFromImage, maskFromImage, maskCount, maskToRLE, maskFromRLE, connectedSameColour, regionLimitedCount,
+    SHADER_GODOT, SHADER_GLSL,
+  };
+  return api;
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = Swatch;
+</script>
+<script>const DEMO = true;
+const WEB_EXAMPLES = [{"name":"knight.png","b64":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAABJQTFRFAAAAvWxKUmB8wMvci5u0PyYx3fDfjAAAAAF0Uk5TAEDm2GYAAABaSURBVAjXY2BAAqGhMBrCYg0NNg0NAAmEGBu7goRCVYyNncAMFyCAMEJCQtAYEClWoGagAQEMocEmxsbOpqEMoUouRsouSiBGoKCgKIgRGqQapAq0DWQVyDIAH0QZnVyQmb0AAAAASUVORK5CYII="},{"name":"viking.png","b64":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAB5QTFRFAAAA98KC4ZplUmB8JitE6qVsi5u0vWxKwMvcPyYx+MwxjQAAAAF0Uk5TAEDm2GYAAABvSURBVAjXRYyxDYBADAO/ZQzGoISCDZBgARQGgPyXNFG+QyDBe1sSGtzkHNkO4RdMdip8OszfSov9MJCSrA5RSR2ecRaaYGHppbdwwN7WnfdxMif4jjBH3ymaELO1mKJu7HCrLg64mquB75RcMo4XRRU3svu3bDYAAAAASUVORK5CYII="},{"name":"ghost.png","b64":"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAAAxQTFRFAAAAi5u0wMvcPyYxKaGK/AAAAAF0Uk5TAEDm2GYAAABPSURBVAjXY2AAg///GRiY//8/wMB/a/kHBv6slUBi1SogsX4flLBfteoPw//Vv/4z/F796z3Dr+yd6xl+Za0EEq9Wr2f49zV8P4P9q/V/AJcrKOLbimK6AAAAAElFTkSuQmCC"}];
+/* Swatchsmith UI. Depends on the global `Swatch` (core.js) and `DEMO` flag. */
+(() => {
+  'use strict';
+  const S = Swatch;
+  const LIMITS = DEMO ? { images: 3, variants: 1 } : { images: Infinity, variants: Infinity };
+  const MAX_LISTED = 512;                    // rows shown in the colour table (exports always use every colour)
+  const MAX_SESSION_PIXELS = 64 * 1024 * 1024; // ~256 MB of decoded RGBA: a whole-session memory guard
+  const MAX_STRIP = 8;                       // variant thumbnails drawn in the preview strip
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, props = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'class') n.className = v; else if (k === 'text') n.textContent = v;
+      else if (k.startsWith('on')) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v);
+    }
+    for (const c of kids) if (c != null) n.append(c);
+    return n;
+  };
+
+  const state = {
+    images: [],            // {id, name, width, height, data, counts, warnings, thumb, mask?, thumbMask?}
+    allKeys: [],           // every visible colour in the session (keys), most used first; exports use this
+    colours: [],           // the rows shown: [{key, count, lab}] for the first MAX_LISTED keys
+    locked: new Set(),
+    selected: new Set(),
+    // map: colour swaps; scope: swaps limited to the painted region ('in') or to everything outside it ('out')
+    variants: [{ name: 'Variant 1', map: new Map(), scope: new Map() }],
+    painting: false,       // region paint mode on the Original preview
+    pendingRegions: new Map(), // regions from a loaded project, waiting for their sprite: name -> {width, height, mask}
+    active: 0,
+    preview: null,
+    zoom: 0,
+    sort: 'count',
+    dirty: false,          // unsaved colour work
+    exporting: false,
+    importing: false,      // sprites are still being read: export and every other change wait for it
+    cancelExport: false,
+  };
+  let nextId = 1;
+  const totalPixels = () => state.images.reduce((s, i) => s + i.width * i.height, 0);
+  const markDirty = () => { state.dirty = true; };
+
+  // ---------------------------------------------------------------- messages
+  function message(kind, text, sticky = true) {
+    const m = el('div', { class: `msg ${kind}`, role: kind === 'err' ? 'alert' : 'status' }, el('span', { text }));
+    if (sticky) m.append(el('button', { class: 'x', type: 'button', 'aria-label': 'Dismiss', text: '×', 'data-keep': '1', onclick: () => m.remove() }));
+    $('msgs').append(m);
+    if (!sticky) setTimeout(() => m.remove(), 4000);
+  }
+  window.addEventListener('error', (e) => message('err', `Something went wrong: ${e.message}. Your files are unchanged. Try again, or reload the page.`));
+  window.addEventListener('unhandledrejection', (e) => message('err', `Something went wrong: ${e.reason && e.reason.message ? e.reason.message : e.reason}.`));
+  window.addEventListener('beforeunload', (e) => { if (state.dirty || state.exporting) { e.preventDefault(); e.returnValue = ''; } });
+  const busyGuard = () => {
+    if (state.exporting) { message('warn', 'Please wait for the export to finish (or cancel it) first.'); return true; }
+    if (state.importing) { message('warn', 'Please wait until the sprites have finished loading.'); return true; }
+    return false;
+  };
+
+  // ---------------------------------------------------------------- loading files
+  async function addFiles(fileList) {
+    if (busyGuard()) return;
+    const files = [...fileList].filter((f) => !f.name.startsWith('.'));
+    if (!files.length) return;
+    let added = 0;
+    const sessionKeys = new Set(state.allKeys); // includes sprites accepted earlier in this same batch
+    state.importing = true; applyBusy();
+    try {
+      for (const [fi, f] of files.entries()) {
+        const label = f.webkitRelativePath || f.name;
+        $('exportInfo').textContent = `Adding sprites… ${fi + 1} of ${files.length}`;
+        if (!/\.png$/i.test(f.name) && f.type !== 'image/png') { message('err', `${label} was skipped: only PNG images are supported.`); continue; }
+        if (state.images.length >= LIMITS.images) { message('warn', `The demo works with up to ${LIMITS.images} sprites. The full version has no fixed limit. (${label} was not added.)`); break; }
+        try {
+          const img = await S.decodePNG(await f.arrayBuffer(), label);
+          if (totalPixels() + img.width * img.height > MAX_SESSION_PIXELS) {
+            message('warn', `${label} was skipped: this session already holds ${(totalPixels() / 1e6).toFixed(1)} megapixels of sprites, and the limit is ${Math.round(MAX_SESSION_PIXELS / 1e6)}, to keep your browser from running out of memory. Export this batch, then start a new one.`);
+            continue;
+          }
+          img.counts = S.countColours(img, S.MAX_IMAGE_COLOURS, label);
+          let extra = 0;
+          for (const k of img.counts.keys()) if (!sessionKeys.has(k)) extra++;
+          if (sessionKeys.size + extra > S.MAX_SESSION_COLOURS) {
+            message('warn', `${label} was skipped: together with the sprites already added it would bring the session to more than ${S.MAX_SESSION_COLOURS.toLocaleString()} different colours. Export this batch, then start a new one.`);
+            continue;
+          }
+          for (const k of img.counts.keys()) sessionKeys.add(k);
+          img.thumb = makeThumb(img, 64);
+          const pend = state.pendingRegions.get(label);
+          if (pend && pend.width === img.width && pend.height === img.height) { img.mask = pend.mask; state.pendingRegions.delete(label); }
+          state.images.push({ id: nextId++, name: label, ...img });
+          for (const w of img.warnings) message('warn', `${label}: ${w}`);
+          added++;
+        } catch (e) {
+          message('err', e instanceof S.SwatchError ? e.message : `${label} could not be read (${e.message}).`);
+        }
+      }
+    } finally {
+      state.importing = false;
+      if (added) {
+        if (!state.preview) state.preview = state.images[0].id;
+        message('ok', `Added ${added} sprite${added === 1 ? '' : 's'}.`, false);
+        recountColours();
+      }
+      renderAll();
+    }
+  }
+
+  function recountColours() {
+    const all = S.mergeCounts(state.images.map((i) => i.counts));
+    const entries = [...all].sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+    state.allKeys = entries.map((e) => e[0]);
+    state.colours = entries.slice(0, MAX_LISTED).map(([key, count]) => ({ key, count, lab: S.rgbToOklab(S.unkey(key)) }));
+    const listed = new Set(state.colours.map((c) => c.key));
+    for (const k of [...state.selected]) if (!listed.has(k)) state.selected.delete(k);
+  }
+
+  // Small thumbnail by nearest-neighbour sampling: never creates a full-size canvas.
+  const thumbGeom = (img, max) => { const s = Math.max(1, Math.max(img.width, img.height) / max); return { s, w: Math.max(1, Math.round(img.width / s)), h: Math.max(1, Math.round(img.height / s)) }; };
+  const thumbSource = (img, s, x, y) => Math.min(img.height - 1, Math.floor(y * s)) * img.width + Math.min(img.width - 1, Math.floor(x * s));
+  function makeThumb(img, max) {
+    const { s, w, h } = thumbGeom(img, max), out = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const p = thumbSource(img, s, x, y) * 4; out.set(img.data.subarray(p, p + 4), (y * w + x) * 4); }
+    return { width: w, height: h, data: out };
+  }
+  // The region mask sampled at the thumbnail's pixels (cached until the region changes).
+  function thumbMask(img) {
+    if (!img.mask) return null;
+    if (!img.thumbMask) {
+      const { s, w, h } = thumbGeom(img, 64), m = new Uint8Array(w * h);
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) m[y * w + x] = img.mask[thumbSource(img, s, x, y)];
+      img.thumbMask = m;
+    }
+    return img.thumbMask;
+  }
+
+  // ---------------------------------------------------------------- rendering: sprite list
+  function thumbCanvas(img) {
+    const t = img.thumb, c = el('canvas');
+    c.width = t.width; c.height = t.height;
+    c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(t.data), t.width, t.height), 0, 0);
+    const s = Math.min(32 / t.width, 32 / t.height, 4);
+    c.style.width = `${Math.max(1, t.width * s)}px`; c.style.height = `${Math.max(1, t.height * s)}px`;
+    return c;
+  }
+  function renderFiles() {
+    const box = $('files');
+    box.replaceChildren();
+    if (!state.images.length) { box.append(el('div', { class: 'file muted', text: 'No sprites yet.' })); return; }
+    for (const img of state.images) {
+      box.append(el('div', { class: 'file' }, thumbCanvas(img), el('span', { class: 'name', title: img.name, text: img.name }),
+        el('span', { class: 'muted', text: `${img.width}×${img.height} · ${img.counts.size} colours` }),
+        el('button', { class: 'x', type: 'button', 'aria-label': `Remove ${img.name}`, text: '×', onclick: () => removeImage(img.id) })));
+    }
+  }
+  function removeImage(id) {
+    if (busyGuard()) return;
+    state.images = state.images.filter((i) => i.id !== id);
+    if (state.preview === id) state.preview = state.images[0] ? state.images[0].id : null;
+    recountColours(); renderAll();
+  }
+
+  // ---------------------------------------------------------------- rendering: variants + colours
+  const variant = () => state.variants[state.active];
+  function renderTabs() {
+    $('tabs').replaceChildren(...state.variants.map((v, i) => el('button', {
+      class: `tab${i === state.active ? ' active' : ''}`, type: 'button', role: 'tab', 'aria-selected': String(i === state.active), text: v.name,
+      onclick: () => { state.active = i; renderAll(); },
+    })));
+    $('varName').value = variant().name;
+    $('delVar').disabled = state.variants.length < 2;
+  }
+  function sortedColours() {
+    const list = [...state.colours];
+    if (state.sort === 'light') list.sort((a, b) => a.lab.L - b.lab.L);
+    else if (state.sort === 'hue') list.sort((a, b) => {
+      const ca = Math.hypot(a.lab.a, a.lab.b), cb = Math.hypot(b.lab.a, b.lab.b);
+      if ((ca < 0.02) !== (cb < 0.02)) return ca < 0.02 ? 1 : -1;
+      return Math.atan2(a.lab.b, a.lab.a) - Math.atan2(b.lab.b, b.lab.a) || a.lab.L - b.lab.L;
+    });
+    return list;
+  }
+  function setTarget(key, rgb) {
+    if (state.exporting || state.importing) return false; // the controls are disabled then; this is a second line of defence
+    const src = S.unkey(key);
+    if (!rgb || (rgb.r === src.r && rgb.g === src.g && rgb.b === src.b)) variant().map.delete(key);
+    else variant().map.set(key, rgb);
+    markDirty();
+    return true;
+  }
+  function setScope(key, where) {
+    if (state.exporting || state.importing) return false;
+    if (where === 'in' || where === 'out') variant().scope.set(key, where); else variant().scope.delete(key);
+    markDirty();
+    return true;
+  }
+  const hasRegions = () => state.images.some((i) => S.maskCount(i.mask));
+  const limitedCount = () => [...variant().scope.keys()].filter((k) => variant().map.has(k)).length;
+  function infoText() {
+    const n = state.allKeys.length, lim = limitedCount();
+    return `${n} colour${n === 1 ? '' : 's'} in ${state.images.length} sprite${state.images.length === 1 ? '' : 's'} · ${variant().map.size} changed in “${variant().name}”${lim ? ` (${lim} only ${lim === 1 ? 'applies' : 'apply'} in or outside the region)` : ''} · ${state.selected.size} selected` +
+      (n > MAX_LISTED ? ` · showing the ${MAX_LISTED} most used here (exports still include all ${n}). Swatchsmith is built for pixel art; this looks like a photo or smoothed art` : '');
+  }
+  function renderColours() {
+    const tb = $('rows');
+    tb.replaceChildren();
+    if (!state.colours.length) {
+      $('colourInfo').textContent = state.images.length ? 'These sprites have no visible colours (every pixel is fully transparent).' : 'Add sprites to see their colours.';
+      return;
+    }
+    $('colourInfo').textContent = infoText();
+    const frag = document.createDocumentFragment();
+    for (const c of sortedColours()) {
+      const src = S.unkey(c.key), hexS = S.keyHex(c.key), t = variant().map.get(c.key), tgt = t || src;
+      const locked = state.locked.has(c.key), sel = state.selected.has(c.key);
+      const colourIn = el('input', { type: 'color', value: S.rgbHex(tgt), 'aria-label': `New colour for ${hexS}` });
+      const hexIn = el('input', { type: 'text', class: 'hexin', value: S.rgbHex(tgt), 'aria-label': `Hex for ${hexS}`, spellcheck: 'false' });
+      if (locked) { colourIn.disabled = true; hexIn.disabled = true; }
+      colourIn.addEventListener('input', () => { if (busyGuard()) { renderColours(); return; } setTarget(c.key, S.parseHex(colourIn.value)); hexIn.value = colourIn.value; changedLater(); });
+      hexIn.addEventListener('change', () => {
+        if (busyGuard()) { renderColours(); return; }
+        const p = S.parseHex(hexIn.value);
+        if (!p) { message('err', `“${hexIn.value}” is not a colour. Use six hex digits, like #3a7bd5.`); hexIn.value = S.rgbHex(variant().map.get(c.key) || src); return; }
+        setTarget(c.key, p); colourIn.value = S.rgbHex(p); hexIn.value = S.rgbHex(p); changedLater();
+      });
+      const selBox = el('input', { type: 'checkbox', 'aria-label': `Select ${hexS}` }); selBox.checked = sel;
+      selBox.addEventListener('change', () => { selBox.checked ? state.selected.add(c.key) : state.selected.delete(c.key); tr.classList.toggle('sel', selBox.checked); $('colourInfo').textContent = infoText(); });
+      const lockBox = el('input', { type: 'checkbox', 'aria-label': `Lock ${hexS}` }); lockBox.checked = locked;
+      lockBox.addEventListener('change', () => {
+        if (busyGuard()) { renderColours(); return; }
+        if (lockBox.checked) { state.locked.add(c.key); for (const v of state.variants) { v.map.delete(c.key); v.scope.delete(c.key); } } else state.locked.delete(c.key);
+        markDirty(); renderColours(); renderPreview();
+      });
+      const whereSel = el('select', { class: 'where', 'aria-label': `Where to change ${hexS}` },
+        el('option', { value: '', text: 'Everywhere' }), el('option', { value: 'in', text: 'Inside region' }), el('option', { value: 'out', text: 'Outside region' }));
+      whereSel.value = variant().scope.get(c.key) || '';
+      if (locked) whereSel.disabled = true;
+      whereSel.addEventListener('change', () => {
+        if (busyGuard()) { renderColours(); return; }
+        setScope(c.key, whereSel.value);
+        if (whereSel.value && !hasRegions()) message('warn', 'No region is painted yet, so “inside” changes won’t show (and “outside” ones apply everywhere) until you paint one in step 3.');
+        changedLater();
+      });
+      const tr = el('tr', { class: `${sel ? 'sel' : ''}${locked ? ' locked' : ''}`, 'data-key': hexS },
+        el('td', {}, selBox),
+        el('td', {}, el('span', { class: 'sw', style: `background:${S.rgbHex(src)};opacity:${src.a / 255}` }), ' ', el('span', { class: 'hex', text: hexS })),
+        el('td', { class: 'muted', text: c.count.toLocaleString() }),
+        el('td', {}, lockBox),
+        el('td', { class: 'arrow', text: '→' }),
+        el('td', {}, colourIn, ' ', hexIn),
+        el('td', {}, whereSel),
+        el('td', {}, t ? el('button', { class: 'x', type: 'button', title: 'Reset to original', 'aria-label': `Reset ${hexS}`, text: '↺', onclick: () => { if (busyGuard()) return; variant().map.delete(c.key); variant().scope.delete(c.key); markDirty(); renderColours(); renderPreview(); } }) : null));
+      frag.append(tr);
+    }
+    tb.append(frag);
+    applyBusy();
+  }
+  let pending = null;
+  function changedLater() { clearTimeout(pending); pending = setTimeout(() => { renderPreview(); $('colourInfo').textContent = infoText(); }, 120); }
+
+  // ---------------------------------------------------------------- preview
+  function drawInto(canvas, img, zoom, boxWidth) {
+    canvas.width = img.width; canvas.height = img.height;
+    canvas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(img.data), img.width, img.height), 0, 0);
+    const z = zoom || Math.max(1, Math.min(16, Math.floor((boxWidth - 20) / img.width)));
+    canvas.style.width = `${img.width * z}px`; canvas.style.height = `${img.height * z}px`;
+  }
+  // The sprite with its region tinted magenta, shown while painting.
+  function withRegionTint(img) {
+    const out = new Uint8Array(img.data), m = img.mask;
+    if (m) for (let p = 0, i = 0; p < m.length; p++, i += 4) {
+      if (!m[p]) continue;
+      if (out[i + 3] === 0) { out[i] = 255; out[i + 1] = 0; out[i + 2] = 200; out[i + 3] = 120; }
+      else { out[i] = (out[i] + 255) >> 1; out[i + 1] >>= 1; out[i + 2] = (out[i + 2] + 200) >> 1; }
+    }
+    return { width: img.width, height: img.height, data: out };
+  }
+  const currentImage = () => state.images.find((i) => i.id === state.preview);
+  function renderPreview() {
+    const sel = $('pvSel');
+    sel.replaceChildren(...state.images.map((i) => el('option', { value: String(i.id), text: i.name })));
+    const img = currentImage();
+    const a = $('pvA'), b = $('pvB'), strip = $('strip');
+    strip.replaceChildren();
+    renderRegionInfo();
+    if (!img) { a.width = a.height = b.width = b.height = 0; return; }
+    sel.value = String(img.id);
+    const boxW = a.parentElement.clientWidth || 300;
+    drawInto(a, state.painting ? withRegionTint(img) : img, state.zoom, boxW);
+    drawInto(b, S.applyMapping(img, variant().map, { mask: img.mask, scope: variant().scope }), state.zoom, boxW);
+    $('pvBLabel').textContent = variant().name;
+    if (state.variants.length > 1) {
+      for (const v of state.variants.slice(0, MAX_STRIP)) {
+        const t = S.applyMapping(img.thumb, v.map, { mask: thumbMask(img), scope: v.scope }), c = el('canvas');
+        drawInto(c, t, Math.max(1, Math.floor(96 / Math.max(t.width, t.height))), 0);
+        strip.append(el('figure', {}, c, el('figcaption', { text: v.name })));
+      }
+      if (state.variants.length > MAX_STRIP) strip.append(el('figure', { class: 'muted', text: `+${state.variants.length - MAX_STRIP} more` }));
+    }
+  }
+
+  // ---------------------------------------------------------------- regions: paint on the Original preview, or load mask images
+  function renderRegionInfo() {
+    const img = currentImage(), withRegion = state.images.filter((i) => S.maskCount(i.mask)).length;
+    $('rgPaint').setAttribute('aria-pressed', String(state.painting));
+    $('pvA').classList.toggle('painting', state.painting);
+    if (!img) { $('rgInfo').textContent = 'Add sprites to paint a region.'; return; }
+    const px = S.maskCount(img.mask);
+    $('rgInfo').textContent = (state.painting ? 'Click or drag on the Original preview to paint. ' : '') +
+      `This sprite: ${px.toLocaleString()} px in the region · ${withRegion} of ${state.images.length} sprite${state.images.length === 1 ? '' : 's'} have a region. ` +
+      'To use it, set a colour’s “Where” in step 2 (or in the Map and Shift dialogs).';
+  }
+  let regionFrame = 0;
+  const regionChanged = (img) => { img.thumbMask = null; markDirty(); if (!regionFrame) regionFrame = requestAnimationFrame(() => { regionFrame = 0; renderPreview(); $('colourInfo').textContent = infoText(); }); };
+  let lastPt = null;
+  function pixelAt(e, img) {
+    const r = $('pvA').getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    return { x: Math.floor(((e.clientX - r.left) / r.width) * img.width), y: Math.floor(((e.clientY - r.top) / r.height) * img.height) };
+  }
+  function brushAt(img, x, y, on) {
+    const n = +$('rgSize').value, o = Math.floor((n - 1) / 2);
+    for (let dy = 0; dy < n; dy++) for (let dx = 0; dx < n; dx++) {
+      const px = x - o + dx, py = y - o + dy;
+      if (px >= 0 && py >= 0 && px < img.width && py < img.height) img.mask[py * img.width + px] = on;
+    }
+  }
+  function paintAt(e, first) {
+    const img = currentImage();
+    if (!img || state.exporting || state.importing) return;
+    const pt = pixelAt(e, img), tool = $('rgTool').value, on = tool === 'brush' || tool === 'fill' ? 1 : 0;
+    if (!pt) return;
+    if (!img.mask) { if (!on) return; img.mask = new Uint8Array(img.width * img.height); }
+    if (tool === 'fill' || tool === 'unfill') {
+      if (!first) return; // fills happen once per click
+      for (const p of S.connectedSameColour(img, pt.x, pt.y)) img.mask[p] = on;
+    } else {
+      const from = lastPt || pt, steps = Math.max(Math.abs(pt.x - from.x), Math.abs(pt.y - from.y), 1);
+      for (let i = 0; i <= steps; i++) brushAt(img, Math.round(from.x + ((pt.x - from.x) * i) / steps), Math.round(from.y + ((pt.y - from.y) * i) / steps), on);
+      lastPt = pt;
+    }
+    regionChanged(img);
+  }
+  const pvA = $('pvA');
+  pvA.addEventListener('pointerdown', (e) => {
+    if (!state.painting || e.button !== 0 || busyGuard()) return;
+    e.preventDefault(); lastPt = null;
+    try { pvA.setPointerCapture(e.pointerId); } catch {}
+    paintAt(e, true);
+  });
+  pvA.addEventListener('pointermove', (e) => { if (state.painting && lastPt && (e.buttons & 1)) paintAt(e, false); });
+  for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) pvA.addEventListener(t, () => { lastPt = null; });
+  $('rgPaint').onclick = () => { if (busyGuard()) return; state.painting = !state.painting; renderPreview(); };
+  $('rgClear').onclick = () => {
+    const img = currentImage();
+    if (busyGuard() || !img || !S.maskCount(img.mask)) return;
+    img.mask = null; regionChanged(img);
+  };
+  $('rgCopy').onclick = () => {
+    if (busyGuard()) return;
+    const img = currentImage();
+    if (!img || !S.maskCount(img.mask)) { message('warn', 'Paint a region on this sprite first.'); return; }
+    const others = state.images.filter((i) => i !== img && i.width === img.width && i.height === img.height);
+    if (!others.length) { message('warn', `No other sprite is ${img.width} × ${img.height}, so there's nothing to copy the region to.`); return; }
+    const replacing = others.filter((i) => S.maskCount(i.mask)).length;
+    if (replacing && !confirm(`Replace the region on ${replacing} sprite${replacing === 1 ? '' : 's'} that already ${replacing === 1 ? 'has' : 'have'} one?`)) return;
+    for (const o of others) { o.mask = new Uint8Array(img.mask); o.thumbMask = null; }
+    markDirty(); renderPreview();
+    message('ok', `Copied this region to ${others.length} sprite${others.length === 1 ? '' : 's'} of the same size.`, false);
+  };
+  const baseName = (name) => rawBase(name).replace(/\.png$/i, '');
+  const rawBase = (name) => String(name).split(/[\\/]/).pop();
+  $('rgIn').addEventListener('change', async () => {
+    const files = [...$('rgIn').files]; $('rgIn').value = '';
+    if (!files.length || busyGuard()) return;
+    if (!state.images.length) { message('warn', 'Add your sprites first, then load their mask images.'); return; }
+    let applied = 0;
+    for (const f of files) {
+      const base = baseName(f.name).replace(/[_\-. ]mask$/i, '');
+      const targets = state.images.filter((i) => baseName(i.name).toLowerCase() === base.toLowerCase());
+      if (!targets.length) { message('warn', `${f.name} was skipped: there's no sprite called ${base}.png. Name a mask like its sprite, with or without “_mask” (for example ${base}_mask.png for ${base}.png).`); continue; }
+      try {
+        const m = await S.decodePNG(await f.arrayBuffer(), f.name);
+        const fit = targets.filter((t) => t.width === m.width && t.height === m.height);
+        if (!fit.length) { message('err', `${f.name} is ${m.width} × ${m.height}, but ${base}.png is ${targets[0].width} × ${targets[0].height}. A mask must be the same size as its sprite.`); continue; }
+        const mask = S.maskFromImage(m);
+        for (const t of fit) { t.mask = new Uint8Array(mask); t.thumbMask = null; applied++; }
+        if (fit.length > 1) message('warn', `${f.name} was used for ${fit.length} sprites called ${base}.png (in different folders).`);
+      } catch (e) { message('err', e instanceof S.SwatchError ? e.message : `${f.name} could not be read (${e.message}).`); }
+    }
+    if (applied) { markDirty(); message('ok', `Loaded ${applied} region mask${applied === 1 ? '' : 's'}. Set a colour’s “Where” to use ${applied === 1 ? 'it' : 'them'}.`, false); }
+    renderAll();
+  });
+
+  function renderAll() {
+    renderFiles(); renderTabs(); renderColours(); renderPreview();
+    const n = state.images.length * state.variants.length;
+    $('exportInfo').textContent = state.images.length ? `${n} image${n === 1 ? '' : 's'} (${state.images.length} sprite${state.images.length === 1 ? '' : 's'} × ${state.variants.length} variant${state.variants.length === 1 ? '' : 's'})` : '';
+    applyBusy();
+  }
+
+  // While exporting, every control that could change the export inputs is disabled.
+  function applyBusy() {
+    const busy = state.exporting || state.importing;
+    document.querySelectorAll('main button, main input, main select, main textarea').forEach((c) => {
+      if (['cancelExport', 'pvSel', 'zoomSel'].includes(c.id) || c.dataset.keep) return;
+      if (busy) { if (!c.disabled) { c.disabled = true; c.dataset.busyLock = '1'; } }
+      else if (c.dataset.busyLock) { c.disabled = false; delete c.dataset.busyLock; }
+    });
+    document.querySelectorAll('main label.btn').forEach((l) => l.classList.toggle('disabled', busy));
+    $('exportBtn').disabled = busy || !state.images.length;
+    $('delVar').disabled = busy || state.variants.length < 2;
+    $('cancelExport').hidden = !state.exporting;
+  }
+
+  // ---------------------------------------------------------------- variant actions
+  function uniqueVariantName(base) {
+    const names = new Set(state.variants.map((v) => v.name.toLowerCase()));
+    let n = base, i = 2;
+    while (names.has(n.toLowerCase())) n = `${base} ${i++}`;
+    return n;
+  }
+  function canAddVariant() {
+    if (busyGuard()) return false;
+    if (state.variants.length >= LIMITS.variants) { message('warn', `The demo makes ${LIMITS.variants} variant at a time. The full version has no fixed limit.`); return false; }
+    return true;
+  }
+  $('addVar').onclick = () => { if (!canAddVariant()) return; state.variants.push({ name: uniqueVariantName(`Variant ${state.variants.length + 1}`), map: new Map(), scope: new Map() }); state.active = state.variants.length - 1; markDirty(); renderAll(); };
+  $('dupVar').onclick = () => { if (!canAddVariant()) return; const v = variant(); state.variants.push({ name: uniqueVariantName(`${v.name} copy`), map: new Map(v.map), scope: new Map(v.scope) }); state.active = state.variants.length - 1; markDirty(); renderAll(); };
+  $('delVar').onclick = () => {
+    if (busyGuard() || state.variants.length < 2) return;
+    if (!confirm(`Delete “${variant().name}”? Its colour choices will be lost.`)) return;
+    state.variants.splice(state.active, 1); state.active = Math.max(0, state.active - 1); markDirty(); renderAll();
+  };
+  $('varName').addEventListener('change', () => {
+    if (busyGuard()) return;
+    const name = S.safeName($('varName').value, '');
+    if (!name) { message('err', 'A variant needs a name.'); $('varName').value = variant().name; return; }
+    if (state.variants.some((v, i) => i !== state.active && v.name.toLowerCase() === name.toLowerCase())) { message('err', `There is already a variant called “${name}”.`); $('varName').value = variant().name; return; }
+    variant().name = name; markDirty(); renderTabs(); renderPreview(); $('colourInfo').textContent = infoText();
+  });
+
+  // ---------------------------------------------------------------- selection tools
+  const selectedUnlocked = () => [...state.selected].filter((k) => !state.locked.has(k));
+  function needSelection() {
+    if (busyGuard()) return null;
+    const s = selectedUnlocked();
+    if (!s.length) { message('warn', state.selected.size ? 'All the selected colours are locked. Unlock them first.' : 'Select one or more colours first (tick the boxes on the left).'); return null; }
+    return s;
+  }
+  $('selAll').onclick = () => { state.colours.forEach((c) => state.selected.add(c.key)); renderColours(); };
+  $('selNone').onclick = () => { state.selected.clear(); renderColours(); };
+  $('resetBtn').onclick = () => { const s = needSelection(); if (!s) return; s.forEach((k) => { variant().map.delete(k); variant().scope.delete(k); }); markDirty(); renderColours(); renderPreview(); };
+  $('sortSel').onchange = () => { state.sort = $('sortSel').value; renderColours(); };
+
+  // map-to-palette dialog. A loaded file's name is kept as a format hint (paint.net .txt files store AARRGGBB) for as
+  // long as the file's leading comment lines are unchanged, so adding or removing colours keeps the format. Replacing
+  // the text or its header drops the hint, and the text is detected again. The format used is always shown, and Apply
+  // reads the palette exactly as shown.
+  let palette = [], palFileName = '', palHeader = '';
+  const leadingComments = (t) => { const out = []; for (const l of String(t).replace(/\r/g, '').split('\n')) { if (/^\s*;/.test(l)) out.push(l.trim()); else if (l.trim()) break; } return out.join('\n'); };
+  function readPalette() {
+    $('mapMsg').replaceChildren();
+    const text = $('palText').value;
+    try {
+      palette = S.parsePalette(text, palFileName);
+      $('palCount').textContent = `${palette.length} colour${palette.length === 1 ? '' : 's'} found${palFileName ? ` in ${palFileName}` : ''} · read as ${S.PALETTE_FORMATS[S.paletteFormat(text, palFileName)]}`;
+    } catch (e) { palette = []; $('palCount').textContent = ''; if (text.trim()) $('mapMsg').append(el('div', { class: 'msg err', text: e.message })); }
+  }
+  $('mapBtn').onclick = () => { if (!needSelection()) return; $('mapMsg').replaceChildren(); $('mapWhere').value = ''; $('mapDlg').showModal(); };
+  $('palText').addEventListener('input', () => {
+    if (palFileName && !(palHeader && leadingComments($('palText').value) === palHeader)) { palFileName = ''; palHeader = ''; }
+    readPalette();
+  });
+  $('palFile').addEventListener('change', async () => {
+    const f = $('palFile').files[0]; if (!f) return;
+    $('palFile').value = '';
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    if (/\.png$/i.test(f.name) || (bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71)) {
+      // A palette image: its colours, in reading order, become hex codes in the box (so they can be edited).
+      try {
+        const cols = S.paletteFromImage(await S.decodePNG(bytes, f.name), 256, f.name);
+        $('palText').value = cols.map((c) => S.rgbHex(c)).join('\n') + '\n'; palFileName = ''; palHeader = ''; readPalette();
+        $('palCount').textContent += ` · taken from the image ${f.name}`;
+      } catch (e) { $('mapMsg').replaceChildren(el('div', { class: 'msg err', text: e.message })); }
+      return;
+    }
+    const text = new TextDecoder().decode(bytes);
+    $('palText').value = text; palFileName = f.name; palHeader = leadingComments(text); readPalette();
+  });
+  $('mapCancel').onclick = () => $('mapDlg').close();
+  $('mapApply').onclick = () => {
+    if (busyGuard()) return;
+    readPalette();
+    if (!palette.length) { if (!$('mapMsg').children.length) $('mapMsg').append(el('div', { class: 'msg err', text: 'Add a palette first.' })); return; }
+    const method = document.querySelector('input[name=method]:checked').value;
+    const s = selectedUnlocked();
+    const where = $('mapWhere').value;
+    for (const [k, c] of S.autoMap(s, palette, method)) setTarget(k, c);
+    for (const k of s) setScope(k, where);
+    $('mapDlg').close(); renderColours(); renderPreview();
+    message('ok', `Mapped ${s.length} colour${s.length === 1 ? '' : 's'} to the palette (${method === 'nearest' ? 'nearest colour' : 'brightness order'}${where ? `, only ${where === 'in' ? 'inside' : 'outside'} the region` : ''}).`, false);
+    if (where && !hasRegions()) message('warn', 'No region is painted yet, so “inside” changes won’t show (and “outside” ones apply everywhere) until you paint one in step 3.');
+  };
+
+  // shift dialog: shifts start from each colour's current new colour, so they add to earlier edits
+  const shVals = () => ({ hue: +$('shHue').value, chroma: +$('shChr').value / 100, light: +$('shLit').value / 100 });
+  for (const id of ['shHue', 'shChr', 'shLit']) $(id).addEventListener('input', () => {
+    const v = shVals(); $('shHueV').textContent = `${v.hue}°`; $('shChrV').textContent = `${Math.round(v.chroma * 100)}%`; $('shLitV').textContent = `${v.light > 0 ? '+' : ''}${Math.round(v.light * 100)}`;
+  });
+  $('shiftBtn').onclick = () => { if (!needSelection()) return; $('shWhere').value = ''; $('shiftDlg').showModal(); };
+  $('shCancel').onclick = () => $('shiftDlg').close();
+  $('shApply').onclick = () => {
+    if (busyGuard()) return;
+    const s = selectedUnlocked();
+    const where = $('shWhere').value;
+    for (const [k, c] of S.shiftColours(s, shVals(), variant().map)) setTarget(k, c);
+    for (const k of s) setScope(k, where);
+    $('shiftDlg').close(); renderColours(); renderPreview();
+    if (where && !hasRegions()) message('warn', 'No region is painted yet, so “inside” changes won’t show (and “outside” ones apply everywhere) until you paint one in step 3.');
+  };
+
+  // ---------------------------------------------------------------- export (from a frozen snapshot only)
+  const enc = new TextEncoder();
+  function download(blob, name) {
+    const a = el('a', { href: URL.createObjectURL(blob), download: name });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  }
+  const stamp = () => { const d = new Date(), p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`; };
+  function snapshot() {
+    return {
+      images: state.images.map((i) => ({ name: i.name, width: i.width, height: i.height, data: i.data, mask: i.mask ? new Uint8Array(i.mask) : null })), // pixel data is never modified in place
+      variants: state.variants.map((v) => ({ name: v.name, map: new Map(v.map), scope: new Map(v.scope) })),
+      colourKeys: state.allKeys.slice(),
+      locked: new Set(state.locked),
+      options: { palettes: $('optPal').checked, lut: $('optLut').checked, shaders: $('optLut').checked && $('optShd').checked, project: $('optProj').checked, originals: $('optOrig').checked },
+    };
+  }
+  const yieldToUI = () => new Promise((r) => setTimeout(r, 0)); // lets clicks (e.g. Cancel) and painting happen mid-export
+  $('cancelExport').onclick = () => { state.cancelExport = true; $('cancelExport').disabled = true; $('exportInfo').textContent = 'Cancelling…'; };
+  $('exportBtn').onclick = async () => {
+    if (state.exporting || !state.images.length) return;
+    if (state.importing) { message('warn', 'Please wait until the sprites have finished loading, then export.'); return; }
+    let snap, plan;
+    try { snap = snapshot(); plan = S.planExport(snap); } catch (e) { message('err', `Export failed: ${e.message}`); return; }
+    state.exporting = true; state.cancelExport = false; $('cancelExport').disabled = false; applyBusy();
+    const prog = $('prog'), bar = prog.firstElementChild;
+    prog.style.display = 'block'; bar.style.width = '0';
+    try {
+      const files = [], heavy = plan.entries.filter((e) => e.kind !== 'text').length;
+      let done = 0, writtenImages = 0, writtenOriginals = 0;
+      for (const e of plan.entries) {
+        if (state.cancelExport) { message('warn', 'Export cancelled. Nothing was saved.'); return; }
+        let data;
+        if (e.kind === 'text') data = enc.encode(e.text);
+        else if (e.kind === 'lut') data = await S.encodePNG(S.buildLUT(snap.colourKeys, snap.variants), yieldToUI);
+        else { const im = snap.images[e.image], v = snap.variants[e.variant]; data = await S.encodePNG(e.variant < 0 ? im : S.applyMapping(im, v.map, { mask: im.mask, scope: v.scope }), yieldToUI); }
+        files.push({ name: e.path, data });
+        if (e.kind === 'image') { if (e.variant < 0) writtenOriginals++; else writtenImages++; }
+        if (e.kind !== 'text') { done++; bar.style.width = `${Math.round((done / heavy) * 95)}%`; await yieldToUI(); }
+      }
+      if (state.cancelExport) { message('warn', 'Export cancelled. Nothing was saved.'); return; }
+      const zip = S.writeZip(files);
+      bar.style.width = '100%';
+      download(zip, `swatchsmith-export-${stamp()}.zip`);
+      if (snap.options.project) state.dirty = false;
+      const c = plan.counts;
+      message('ok', `Exported ${writtenImages} image${writtenImages === 1 ? '' : 's'} in ${c.variants} variant folder${c.variants === 1 ? '' : 's'}${writtenOriginals ? ` plus ${writtenOriginals} original${writtenOriginals === 1 ? '' : 's'}` : ''} (${files.length} files in the ZIP).`, false);
+      for (const n of plan.notes) message('warn', n);
+    } catch (e) {
+      message('err', `Export failed: ${e.message}. Nothing was saved. Try exporting fewer sprites at once.`);
+    } finally {
+      state.exporting = false; applyBusy(); renderAll();
+      setTimeout(() => { prog.style.display = 'none'; }, 800);
+    }
+  };
+
+  // ---------------------------------------------------------------- projects
+  $('saveProj').onclick = () => {
+    if (busyGuard()) return;
+    download(new Blob([S.projectToJSON(state)], { type: 'application/json' }), `swatchsmith-project-${stamp()}.json`); // includes painted regions
+    state.dirty = false;
+  };
+  $('projIn').addEventListener('change', async () => {
+    const f = $('projIn').files[0]; $('projIn').value = '';
+    if (!f || busyGuard()) return;
+    try {
+      const p = S.projectFromJSON(await f.text());
+      if (state.dirty && !confirm('Loading this project replaces your current variants, locks and regions. Changes you have not saved will be lost. Continue?')) return;
+      let variants = p.variants.length ? p.variants : [{ name: 'Variant 1', map: new Map(), scope: new Map() }];
+      if (variants.length > LIMITS.variants) { message('warn', `The demo loads only the first variant of this project (${variants.length} saved).`); variants = variants.slice(0, LIMITS.variants); }
+      state.variants = variants; state.locked = p.locked; state.active = 0; state.dirty = false;
+      // Regions belong to sprites by name and size; ones whose sprite isn't loaded yet apply when it is added.
+      state.pendingRegions = new Map();
+      let matched = 0;
+      for (const r of p.regions) {
+        const img = state.images.find((i) => i.name === r.sprite && i.width === r.width && i.height === r.height);
+        if (img) { img.mask = r.mask; img.thumbMask = null; matched++; } else state.pendingRegions.set(r.sprite, r);
+      }
+      for (const img of state.images) if (!p.regions.some((r) => r.sprite === img.name)) { img.mask = null; img.thumbMask = null; }
+      if (p.regions.length) message('ok', `Project regions: ${matched} applied${state.pendingRegions.size ? `, ${state.pendingRegions.size} waiting for their sprites (add them and the regions apply)` : ''}.`, false);
+      const known = new Set(state.allKeys);
+      const unknown = new Set([...variants.flatMap((v) => [...v.map.keys()])].filter((k) => !known.has(k)));
+      message('ok', `Loaded project “${f.name}” with ${variants.length} variant${variants.length === 1 ? '' : 's'}.`, false);
+      if (state.images.length && unknown.size) message('warn', `${unknown.size} colour swap${unknown.size === 1 ? '' : 's'} in this project ${unknown.size === 1 ? 'does' : 'do'} not appear in the current sprites. They will apply when matching sprites are added.`);
+      renderAll();
+    } catch (e) { message('err', e.message); }
+  });
+
+  // ---------------------------------------------------------------- inputs, drag & drop, misc
+  $('fileIn').addEventListener('change', async () => { const fl = [...$('fileIn').files]; $('fileIn').value = ''; await addFiles(fl); });
+  $('dirIn').addEventListener('change', async () => { const fl = [...$('dirIn').files]; $('dirIn').value = ''; await addFiles(fl); });
+  $('clearBtn').onclick = () => {
+    if (busyGuard()) return;
+    if (state.images.length && !confirm('Remove all sprites? Your colour choices are kept.')) return;
+    state.images = []; state.preview = null; recountColours(); renderAll();
+  };
+  $('pvSel').onchange = () => { state.preview = +$('pvSel').value; renderPreview(); };
+  $('zoomSel').onchange = () => { state.zoom = +$('zoomSel').value; renderPreview(); };
+  $('optLut').addEventListener('change', () => { $('optShd').disabled = !$('optLut').checked; });
+  $('helpBtn').onclick = () => $('helpDlg').showModal();
+  $('helpClose').onclick = () => $('helpDlg').close();
+  const drop = $('drop');
+  async function filesFromEntry(entry, out) {
+    if (entry.isFile) { out.push(await new Promise((res, rej) => entry.file((f) => { try { Object.defineProperty(f, 'webkitRelativePath', { value: entry.fullPath.replace(/^\//, '') }); } catch {} res(f); }, rej))); return; }
+    if (entry.isDirectory) {
+      const reader = entry.createReader();
+      for (;;) { const batch = await new Promise((res, rej) => reader.readEntries(res, rej)); if (!batch.length) break; for (const e of batch) await filesFromEntry(e, out); }
+    }
+  }
+  ['dragenter', 'dragover'].forEach((t) => window.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach((t) => window.addEventListener(t, (e) => { e.preventDefault(); if (t === 'drop' || e.target === document.documentElement) drop.classList.remove('over'); }));
+  window.addEventListener('drop', async (e) => {
+    if (busyGuard() || !e.dataTransfer) return;
+    // Everything is read synchronously here: DataTransfer contents are only available during the event.
+    const dropped = [...(e.dataTransfer.items || [])].filter((i) => i.kind === 'file')
+      .map((i) => ({ file: i.getAsFile(), entry: i.webkitGetAsEntry ? i.webkitGetAsEntry() : null }));
+    const plain = [...(e.dataTransfer.files || [])];
+    if (!dropped.length) { await addFiles(plain); return; }
+    const out = [];
+    let failed = 0;
+    for (const d of dropped) {
+      if (d.entry && d.entry.isDirectory) {
+        try { await filesFromEntry(d.entry, out); } catch { failed++; }
+      } else if (d.entry && d.entry.isFile) {
+        try { await filesFromEntry(d.entry, out); } catch { if (d.file) out.push(d.file); else failed++; } // fall back to the File itself
+      } else if (d.file) out.push(d.file);
+    }
+    if (failed) message('err', `${failed} dropped item${failed === 1 ? '' : 's'} could not be read. Try “Add PNG files…” or “Add a folder…” instead.`);
+    await addFiles(out);
+  });
+
+  if (!('DecompressionStream' in window) || !('CompressionStream' in window)) {
+    message('err', 'This browser is too old for Swatchsmith. Please use a current version of Chrome, Edge, Firefox or Safari (2023 or newer).');
+  }
+  if (DEMO) message('warn', 'Demo version: up to 3 sprites and 1 variant. Everything else works exactly like the full version.');
+  if (WEB_EXAMPLES && $('webExamples')) $('webExamples').onclick = () => {
+    const bytes = (b64) => Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
+    addFiles(WEB_EXAMPLES.map((x) => new File([bytes(x.b64)], x.name, { type: 'image/png' })));
+  };
+  renderAll();
+})();
+</script>
+</body>
+</html>
